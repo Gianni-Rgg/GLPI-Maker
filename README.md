@@ -22,13 +22,11 @@ Follow the instructions and everything's gonna be alright ! ;)
 
 ## HTTPS
 
-If you choose to configure HTTPS access with the script, the certificates will be available in your user's $HOME directory.
+If you choose to configure HTTPS access with the script, the certificates will be available in your root directory.
 
 The ".crt" file allows the HTTPS connection to your server from most browsers (like Chrome or Edge for example).
 
 The ".pem" file allows the HTTPS connection to your server from browsers like Mozilla Firefox.
-
-Please note that setting up HTTPS on GLPI will generate additional configurations for the deployment of Fusion Inventory agents.
 
 All the files used to generate the certificates are available in :
 ```
