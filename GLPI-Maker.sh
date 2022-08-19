@@ -207,13 +207,23 @@ then
 
 	AddHTTPS="True"
 
-	while [ -z $WebSiteName ];
+	while [ -z $HostName ];
 	do
 
-	echo -e "\nwhat will be the full name of the website ? For exemple : glpi.mydom.local"
-	read WebSiteName
+	echo -e "\nwhat will be the host name of the website ? For exemple in \"glpi.mydom.local\" : this will be \"glpi\""
+	read HostName
 
 	done
+
+    while [ -z $DomainName ];
+	do
+
+	echo -e "\nwhat will be the domain name of the website ? For exemple in \"glpi.mydom.local\" : this will be \"mydom.local\""
+	read DomainName
+
+	done
+
+    WebSiteName=$(echo "$HostName.$DomainName")
 
 	while [ -z $Country ];
 	do
@@ -391,17 +401,17 @@ then
 
 	cd /etc/ssl/glpi
 
-	openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout CA.key -out Cert.pem -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName"
+	openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout CAroot.key -out CAroot.pem -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName"
 
-	openssl x509 -outform pem -in Cert.pem -out Cert.crt
+	openssl x509 -outform pem -in CAroot.pem -out CAroot.crt
 
-	echo -e "authorityKeyIdentifier=keyid,issuer\nbasicConstraints=CA:FALSE\nkeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\nsubjectAltName = @alt_names\n[alt_names]\nIP.1 = $addr\nDNS.1 = $WebSiteName" > domains.ext
+	echo -e "authorityKeyIdentifier=keyid,issuer\nbasicConstraints=CA:FALSE\nkeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\nsubjectAltName = @alt_names\n[alt_names]\nIP.1 = $addr\nDNS.1 = $WebSiteName\nDNS.2 = $HostName" > domains.ext
 
 	openssl req -new -nodes -newkey rsa:2048 -keyout GLPI.key -out GLPI.csr -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName"
 
 	cp GLPI.key /etc/ssl/private/
 
-	openssl x509 -req -sha256 -days 1024 -in GLPI.csr -CA Cert.pem -CAkey CA.key -CAcreateserial -extfile domains.ext -out GLPI.crt
+	openssl x509 -req -sha256 -days 1024 -in GLPI.csr -CA CAroot.pem -CAkey CAroot.key -CAcreateserial -extfile domains.ext -out GLPI.crt
 
 	cp GLPI.crt /etc/ssl/certs/
 
@@ -421,9 +431,9 @@ then
 
 	a2ensite default-ssl
 
-	cp /etc/ssl/glpi/Cert.crt $HOMEpath
+	cp /etc/ssl/glpi/CAroot.crt $HOMEpath
 
-	cp /etc/ssl/glpi/Cert.pem $HOMEpath
+	cp /etc/ssl/glpi/CAroot.pem $HOMEpath
 
 fi
 
