@@ -273,20 +273,42 @@ then
 
     AddFirewall="True"
 
-    echo -e "\nWhat port do you want for SSH ? (Port 22 by default)"
-
-    read SSHPort
-
-    if [ -z $SSHPort ];
-    then
-
-        SSHPort="22"
-
-    fi
-
 else
 
     AddFirewall="False"
+
+fi
+
+echo -e "\nWhat port do you want to use for SSH ? (Port 22 by default)"
+
+read SSHPort
+
+if [ -z $SSHPort ];
+then
+
+    SSHPort="22"
+
+fi
+
+rep=""
+
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
+
+    echo -e "\nDo you want to configure ModSecurity ? (y/n)"
+
+    read rep
+
+done
+
+if [ "$rep" = "y" ];
+then
+
+    AddModSec="True"
+
+else
+
+    AddModSec="False"
 
 fi
 
@@ -332,14 +354,11 @@ do
 
     echo -e "Add firewall : $AddFirewall\n"
 
-    if [[ "$AddFirewall" == "True" ]];
-    then
+    echo -e "SSH port : $SSHPort\n"
 
-        echo -e "SSH port : $SSHPort\n"
+    echo -e "Add ModSecurity : $AddModSec\n"
 
-    fi
-
-    echo -e "\n\nDo you confirm ? (y/n)\n---------------------------------"
+    echo -e "\n\nDo you confirm ? (y/n)\n----------------------"
 
     read rep
 
@@ -540,6 +559,10 @@ then
 
 fi
 
+echo -e "\n---------------------------------------------------------\nConfiguring SSH...\n"
+
+sed -i "s/#Port 22/Port $SSHPort/g" /etc/ssh/sshd_config
+
 if [ "$AddFirewall" = "True" ];
 then
 
@@ -547,19 +570,38 @@ then
 
     apt install ufw -y
 
-    sed -i "s/#Port 22/Port $SSHPort/g" /etc/ssh/sshd_config
-
     ufw allow $SSHPort/tcp
 
     ufw allow 80/tcp
 
     ufw allow 443/tcp
 
+    ufw allow 62354/tcp
+
     ufw default allow outgoing
 
     ufw default deny incoming
 
-    ufw enable
+fi
+
+echo -e "\n---------------------------------------------------------\nConfiguring fail2ban...\n"
+
+apt install fail2ban -y
+
+cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local 
+
+sed -i "s/port    = ssh/port    = $SSHPort/g" /etc/fail2ban/jail.local
+
+if [ "$AddModSec" = "True" ];
+then
+
+    echo -e "\n---------------------------------------------------------\nConfiguring ModSecurity...\n"
+
+    apt install modsecurity-crs -y
+
+    cp /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
+
+    sed -i "s/SecRuleEngine DetectionOnly/SecRuleEngine On/g" /etc/modsecurity/modsecurity.conf
 
 fi
 
@@ -569,6 +611,15 @@ service ssh restart
 
 service cron restart
 
+service fail2ban restart
+
 service apache2 restart
 
 echo -e "----------------------------------------------------------------\n\nTo continue the installation, go to : http://$addr/\n"
+
+if [ "$AddFirewall" = "True" ];
+then
+
+    echo -e "Don't forget to activate the firewall with the command : \"sudo ufw enable\"\n\n"
+
+fi
