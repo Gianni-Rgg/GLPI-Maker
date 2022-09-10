@@ -6,20 +6,20 @@ cd
 
 HOMEpath="/root"
 
+rep=""
+
 echo -e "\n\n\n-------------------------\n| Welcome to GLPI-Maker |\n-------------------------\n\nBy Gianni Ruggiero\nhttps://www.linkedin.com/in/Gianni-Rgg\nhttps://www.youtube.com/channel/UC5ixKngUySH_5rEv5ghq5KA\nhttps://github.com/Gianni-Rgg/GLPI-Maker\n\nPlease, be sure to launch this script with the command \"bash\" and not \"sh\".\n\nPlease, never put spaces in answers. You can replace them with \"-\" or \"_\".\n"
 
-echo -e "\nDo you want to download GLPI ? (y/n)"
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
 
-read rep
+    echo -e "\nDo you want to download GLPI ? (y/n)"
 
-if [ -z $rep ];
-then
+    read rep
 
-    rep="y"
+done
 
-fi
-
-if [ $rep = "y" ] || [ $rep = "Y" ] || [ $rep = "yes" ] || [ $rep = "Yes" ] || [ $rep = "YES" ] || [ $rep = "o" ] || [ $rep = "O" ] || [ $rep = "oui" ] || [ $rep = "Oui" ] || [ $rep = "OUI" ];
+if [ "$rep" = "y" ];
 then
 
     while [ -z $glpi_link ];
@@ -48,31 +48,25 @@ else
 
 fi
 
-echo -e "\nDo you want to generate secure passwords for the database ? (y/n)"
+rep=""
 
-read rep
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
 
-if [ -z $rep ];
+    echo -e "\nDo you want to generate secure passwords for the database ? (y/n)"
+
+    read rep
+
+done
+
+if [ "$rep" = "y" ];
 then
 
-    rep="y"
-
-fi
-
-if [ $rep = "y" ] || [ $rep = "Y" ] || [ $rep = "yes" ] || [ $rep = "Yes" ] || [ $rep = "YES" ] || [ $rep = "o" ] || [ $rep = "O" ] || [ $rep = "oui" ] || [ $rep = "Oui" ] || [ $rep = "OUI" ];
-then
-
-    DbRootPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
-
-    echo -e "\n\nThe password for the user \"root\" for the database is : $DbRootPassword" > $HOMEpath/PASSWORDS.txt
-
-    DbUserPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
-
-    echo -e "\nThe password for the user \"glpi\" for the database is : $DbUserPassword\n\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
-
-    chmod 700 $HOMEpath/PASSWORDS.txt
+    GenDBPass="True"
 
 else
+
+    GenDBPass="False"
 
     var1=""
     var2=""
@@ -92,7 +86,7 @@ else
 
     done
 
-    DbRootPassword=$var1
+    DbRootPassword="$var1"
 
     var1=""
     var2=""
@@ -111,7 +105,7 @@ else
 
     done
 
-    DbUserPassword=$var1
+    DbUserPassword="$var1"
 
 fi
 
@@ -129,34 +123,34 @@ then
 
 fi
 
-echo -e "\nDo you want to install Fusion Inventory on GLPI ? (y/n)"
+rep=""
 
-read rep
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
 
-if [ -z $rep ];
-then
-
-    rep="y"
-
-fi
-
-if [ $rep = "y" ] || [ $rep = "Y" ] || [ $rep = "yes" ] || [ $rep = "Yes" ] || [ $rep = "YES" ] || [ $rep = "o" ] || [ $rep = "O" ] || [ $rep = "oui" ] || [ $rep = "Oui" ] || [ $rep = "OUI" ];
-then
-
-    AddFusionInventory="True"
-    
-    echo -e "\nDo you want to download Fusion Inventory ? (y/n)"
+    echo -e "\nDo you want to install Fusion Inventory on GLPI ? (y/n)"
 
     read rep
 
-    if [ -z $rep ];
-    then
+done
 
-        rep="y"
+if [ "$rep" = "y" ];
+then
 
-    fi
+    AddFusionInventory="True"
 
-    if [ $rep = "y" ] || [ $rep = "Y" ] || [ $rep = "yes" ] || [ $rep = "Yes" ] || [ $rep = "YES" ] || [ $rep = "o" ] || [ $rep = "O" ] || [ $rep = "oui" ] || [ $rep = "Oui" ] || [ $rep = "OUI" ];
+    rep=""
+
+    until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+    do
+    
+        echo -e "\nDo you want to download Fusion Inventory ? (y/n)"
+
+        read rep
+
+    done
+
+    if [ "$rep" = "y" ];
     then
 
         while [ -z $fi_link ];
@@ -191,18 +185,18 @@ else
 
 fi
 
-echo -e "\nDo you want to configure SSL/TLS with a new Certification Authority (for HTTPS access) ? (y/n)\nThe script will automatically create self signed CA certificates and configure apache for this.\nIn the case where you would already have a CA, you will be able to replace the certificates in the apache ssl configuration file."
+rep=""
 
-read rep
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
 
-if [ -z $rep ];
-then
+    echo -e "\nDo you want to configure SSL/TLS with a new Certification Authority (for HTTPS access) ? (y/n)\nThe script will automatically create self signed CA certificates and configure apache for this.\nIn the case where you would already have a CA, you will be able to replace the certificates in the apache ssl configuration file."
 
-    rep="y"
+    read rep
 
-fi
+done
 
-if [ $rep = "y" ] || [ $rep = "Y" ] || [ $rep = "yes" ] || [ $rep = "Yes" ] || [ $rep = "YES" ] || [ $rep = "o" ] || [ $rep = "O" ] || [ $rep = "oui" ] || [ $rep = "Oui" ] || [ $rep = "OUI" ];
+if [ "$rep" = "y" ];
 then
 
 	AddHTTPS="True"
@@ -210,7 +204,7 @@ then
 	while [ -z $HostName ];
 	do
 
-	echo -e "\nwhat will be the host name of the website ? For exemple in \"glpi.mydom.local\" : this will be \"glpi\""
+	echo -e "\nWhat will be the host name of the website ? For exemple in \"glpi.mydom.local\" this will be \"glpi\""
 	read HostName
 
 	done
@@ -218,7 +212,7 @@ then
     while [ -z $DomainName ];
 	do
 
-	echo -e "\nwhat will be the domain name of the website ? For exemple in \"glpi.mydom.local\" : this will be \"mydom.local\""
+	echo -e "\nWhat will be the domain name of the website ? For exemple in \"glpi.mydom.local\" this will be \"mydom.local\""
 	read DomainName
 
 	done
@@ -228,7 +222,7 @@ then
 	while [ -z $Country ];
 	do
 
-	echo -e "\nWhat country code will be displayed on the certificate ? For example : FR (for France)"
+	echo -e "\nWhat country code will be displayed on the certificate ? For example FR (for France)"
 	read Country
 
 	done
@@ -236,7 +230,7 @@ then
 	while [ -z $State ];
 	do
 
-	echo -e "\nWhich state will be displayed on the certificate ? For exemple : \"Ile-De-France\""
+	echo -e "\nWhich state will be displayed on the certificate ? For exemple \"Ile-De-France\""
 	read State
 
 	done
@@ -244,7 +238,7 @@ then
 	while [ -z $City ];
 	do
 
-	echo -e "\nWhich city will be displayed on the certificate ? For exemple : \"Paris\""
+	echo -e "\nWhich city will be displayed on the certificate ? For exemple \"Paris\""
 	read City
 
 	done
@@ -263,6 +257,100 @@ else
 
 fi
 
+rep=""
+
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
+
+    echo -e "\nDo you want to configure the firewall (ufw) ? (y/n)"
+
+    read rep
+
+done
+
+if [ "$rep" = "y" ];
+then
+
+    AddFirewall="True"
+
+    echo -e "\nWhat port do you want for SSH ? (Port 22 by default)"
+
+    read SSHPort
+
+    if [ -z $SSHPort ];
+    then
+
+        SSHPort="22"
+
+    fi
+
+else
+
+    AddFirewall="False"
+
+fi
+
+rep=""
+
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
+
+    clear
+
+    echo -e "\nLink for GLPI : $glpi_link\n"
+
+    echo -e "Generate passwords for db : $GenDBPass\n"
+
+    if [ -z $Tz1 ];
+    then
+
+        echo -e "Timezone : No timezone\n"
+
+    else
+
+        echo -e "Timezone : $Tz1/$Tz2\n"
+    
+    fi
+
+    echo -e "Add Fusion Inventory : $AddFusionInventory\n"
+
+    if [[ "$AddFusionInventory" == "True" ]];
+    then
+
+        echo -e "Link for FI : $fi_link\n"
+
+    fi
+
+    echo -e "Add HTTPS : $AddHTTPS\n"
+
+    if [[ "$AddHTTPS" == "True" ]];
+    then
+
+        echo -e "Web site name : $WebSiteName\nCountry : $Country\nState : $State\nCity : $City\nCompany : $Company\n"
+
+    fi
+
+    echo -e "Add firewall : $AddFirewall\n"
+
+    if [[ "$AddFirewall" == "True" ]];
+    then
+
+        echo -e "SSH port : $SSHPort\n"
+
+    fi
+
+    echo -e "\n\nDo you confirm ? (y/n)\n---------------------------------"
+
+    read rep
+
+done
+
+if [ "$rep" = "n" ];
+then
+
+    exit
+
+fi
 
 echo -e "\n---------------------------------------------------------\nUpdating the packages...\n"
 
@@ -281,6 +369,21 @@ echo -e "\n---------------------------------------------------------\nRemoving u
 apt autoremove -y
 
 echo -e "\n---------------------------------------------------------\nConfiguring databases...\n"
+
+if [[ "$GenDBPass" == "True" ]];
+then
+
+    DbRootPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+
+    echo -e "\n\nThe password for the user \"root\" for the database is : $DbRootPassword" > $HOMEpath/PASSWORDS.txt
+
+    DbUserPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+
+    echo -e "\nThe password for the user \"glpi\" for the database is : $DbUserPassword\n\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
+
+    chmod 700 $HOMEpath/PASSWORDS.txt
+
+fi
 
 mysql -u root -e "CREATE DATABASE glpi;"
 
@@ -318,14 +421,14 @@ mkdir -p /tmp/install/GLPI-Sources
 
 cd /tmp/install/GLPI-Sources
 
-if [ $UseWebForGLPI = "True" ];
+if [ "$UseWebForGLPI" = "True" ];
 then
 
-    wget $glpi_link
+    wget "$glpi_link"
 
 else
 
-    mv $glpi_link .
+    mv "$glpi_link" .
 
 fi
 
@@ -344,7 +447,7 @@ phpv=$(ls /etc/php/)
 if [ ! -z $Tz2 ];
 then
 
-	sed -i -e "s/;date.timezone =/date.timezone = $Tz1\/$Tz2/g" /etc/php/$phpv/cli/php.ini
+	sed -i -e "s/;date.timezone =/date.timezone = "$Tz1"\/"$Tz2"/g" /etc/php/$phpv/cli/php.ini
 
 fi
 
@@ -358,7 +461,7 @@ echo "* * * * * php /var/www/html/front/cron.php &>/dev/null" >> /var/spool/cron
 
 chown root:crontab /var/spool/cron/crontabs/root
 
-if [ $AddFusionInventory = "True" ];
+if [ "$AddFusionInventory" = "True" ];
 then
 
     echo -e "---------------------------------------------------------\nInstalling Fusion Inventory...\n"
@@ -367,14 +470,14 @@ then
 
     cd /tmp/install/FusionInventory-Sources
 
-    if [ $UseWebForFI = "True" ];
+    if [ "$UseWebForFI" = "True" ];
     then
 
-        wget $fi_link
+        wget "$fi_link"
 
     else
 
-        mv $fi_link .
+        mv "$fi_link" .
 
     fi
 
@@ -390,7 +493,7 @@ fi
 
 addr=$(hostname -I | awk '$1=$1')
 
-if [ $AddHTTPS = "True" ];
+if [ "$AddHTTPS" = "True" ];
 then
 
 	echo -e "\n---------------------------------------------------------\nConfiguring SSL/TLS...\n"
@@ -437,7 +540,32 @@ then
 
 fi
 
+if [ "$AddFirewall" = "True" ];
+then
+
+    echo -e "\n---------------------------------------------------------\nConfiguring firewall...\n"
+
+    apt install ufw -y
+
+    sed -i "s/#Port 22/Port $SSHPort/g" /etc/ssh/sshd_config
+
+    ufw allow $SSHPort/tcp
+
+    ufw allow 80/tcp
+
+    ufw allow 443/tcp
+
+    ufw default allow outgoing
+
+    ufw default deny incoming
+
+    ufw enable
+
+fi
+
 echo -e "\n---------------------------------------------------------\nRestarting services...\n"
+
+service ssh restart
 
 service cron restart
 
