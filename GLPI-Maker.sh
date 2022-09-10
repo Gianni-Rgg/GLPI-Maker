@@ -354,9 +354,9 @@ sed -i -e "s/file_uploads = off/file_uploads = on/g" /etc/php/$phpv/cli/php.ini
 
 sed -i -e "s/memory_limit =.*/memory_limit = -1/g" /etc/php/$phpv/cli/php.ini
 
-echo "* * * * * php /var/www/html/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/www-data
+echo "* * * * * php /var/www/html/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/root
 
-chown -R www-data:crontab /var/spool/cron/crontabs/www-data
+chown root:crontab /var/spool/cron/crontabs/root
 
 if [ $AddFusionInventory = "True" ];
 then
@@ -436,8 +436,6 @@ then
 	cp /etc/ssl/glpi/CAroot.pem $HOMEpath
 
 fi
-
-source /etc/apache2/envvars
 
 echo -e "\n---------------------------------------------------------\nRestarting services...\n"
 
