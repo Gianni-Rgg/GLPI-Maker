@@ -541,6 +541,8 @@ then
 
     sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/glpi/g" /etc/apache2/sites-available/default-ssl.conf
 
+    sed -i "s/<Directory \/var\/www\/html>/<Directory \/var\/www\/html\/glpi>/g" /etc/apache2/sites-available/default-ssl.conf
+
 	sed -i "/DocumentRoot/i\\\t\tServerName $WebSiteName" /etc/apache2/sites-available/default-ssl.conf
 
 	sed -i -e "s/SSLCertificateFile.*/SSLCertificateFile\t\/etc\/ssl\/certs\/GLPI.crt/g" /etc/apache2/sites-available/default-ssl.conf
