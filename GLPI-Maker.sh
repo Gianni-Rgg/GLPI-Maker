@@ -421,11 +421,13 @@ mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$DbRootPassword';
 echo -e "---------------------------------------------------------\nConfiguring apache...\n"
 
 sed -i "/DocumentRoot/a\\
-\t<Directory /var/www/html>\n\
+\t<Directory /var/www/html/glpi>\n\
 \tOptions Indexes FollowSymLinks\n\
 \tAllowOverride All\n\
 \tRequire all granted\n\
 \t</Directory>\n" /etc/apache2/sites-available/000-default.conf
+
+sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/glpi/g" /etc/apache2/sites-available/000-default.conf
 
 echo -e "---------------------------------------------------------\nInstallating GLPI...\n"
 
@@ -455,7 +457,7 @@ tar -xvzf $(ls)
 
 rm /var/www/html/index.html
 
-cp -r glpi/* /var/www/html/
+cp -r glpi /var/www/html/
 
 chown -R www-data:www-data /var/www/html
 
@@ -476,7 +478,7 @@ sed -i -e "s/file_uploads = off/file_uploads = on/g" /etc/php/$phpv/cli/php.ini
 
 sed -i -e "s/memory_limit =.*/memory_limit = -1/g" /etc/php/$phpv/cli/php.ini
 
-echo "* * * * * php /var/www/html/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/root
+echo "* * * * * php /var/www/html/glpi/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/root
 
 chown root:crontab /var/spool/cron/crontabs/root
 
@@ -502,11 +504,11 @@ then
 
     tar -xvf $(ls)
 
-    cp -r fusioninventory /var/www/html/plugins/
+    cp -r fusioninventory /var/www/html/glpi/plugins/
 
-    chown -R www-data:www-data /var/www/html/plugins
+    chown -R www-data:www-data /var/www/html/glpi/plugins
 
-    rm /var/www/html/plugins/remove.txt
+    rm /var/www/html/glpi/plugins/remove.txt
 
 fi
 
@@ -536,6 +538,8 @@ then
 	openssl x509 -req -sha256 -days 1024 -in GLPI.csr -CA CAroot.pem -CAkey CAroot.key -CAcreateserial -extfile domains.ext -out GLPI.crt
 
 	cp GLPI.crt /etc/ssl/certs/
+
+    sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/glpi/g" /etc/apache2/sites-available/default-ssl.conf
 
 	sed -i "/DocumentRoot/i\\\t\tServerName $WebSiteName" /etc/apache2/sites-available/default-ssl.conf
 
@@ -620,6 +624,6 @@ echo -e "----------------------------------------------------------------\n\nTo 
 if [ "$AddFirewall" = "True" ];
 then
 
-    echo -e "Don't forget to activate the firewall with the command : \"sudo ufw enable\"\n\n"
+    echo -e "Don't forget to enable the firewall with the command : \"sudo ufw enable\"\n\n"
 
 fi

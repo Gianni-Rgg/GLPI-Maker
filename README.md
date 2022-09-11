@@ -47,7 +47,7 @@ sudo cat /root/PASSWORDS.txt
 
 After the web configuration, you must secure GLPI with :
 ```
-sudo rm /var/www/html/install/install.php
+sudo rm /var/www/html/glpi/install/install.php
 ```
 
 Enjoy !
