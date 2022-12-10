@@ -16,8 +16,6 @@ The type of path is :
 
 Follow the instructions and everything's gonna be alright ! ;)
 
-### PLEASE DO NOT INSTALL MULTIPLE VERSIONS OF PHP !!!
-
 ### This script is developed to work on Linux Debian.
 
 ## HTTPS

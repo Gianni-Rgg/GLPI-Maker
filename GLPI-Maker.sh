@@ -8,7 +8,7 @@ HOMEpath="/root"
 
 rep=""
 
-echo -e "\n\n\n-------------------------\n| Welcome to GLPI-Maker |\n-------------------------\n\nBy Gianni Ruggiero\nhttps://www.linkedin.com/in/Gianni-Rgg\nhttps://www.youtube.com/channel/UC5ixKngUySH_5rEv5ghq5KA\nhttps://github.com/Gianni-Rgg/GLPI-Maker\n\nPlease, be sure to launch this script with the command \"bash\" and not \"sh\".\n\nPlease, never put spaces in answers. You can replace them with \"-\" or \"_\".\n"
+echo -e "\n\n\n-------------------------\n| Welcome to GLPI-Maker |\n-------------------------\n\nBy Gianni Ruggiero\nhttps://www.linkedin.com/in/Gianni-Rgg\nhttps://www.youtube.com/channel/UC5ixKngUySH_5rEv5ghq5KA\nhttps://github.com/Gianni-Rgg/GLPI-Maker\n\n------------------------------------------------------------"
 
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
@@ -53,7 +53,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to generate secure passwords for the database ? (y/n)"
+    echo -e "\nDo you want to install MariaDB on this machine ? (y/n)"
 
     read rep
 
@@ -62,50 +62,72 @@ done
 if [ "$rep" = "y" ];
 then
 
-    GenDBPass="True"
+    InstallMariaDB="True"
+
+    rep=""
+
+    until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+    do
+
+        echo -e "\nDo you want to generate secure passwords for the database ? (y/n)"
+
+        read rep
+
+    done
+
+    if [ "$rep" = "y" ];
+    then
+
+        GenDBPass="True"
+
+    else
+
+        GenDBPass="False"
+
+        var1=""
+        var2=""
+
+        while [ -z $var1 ] || [ -z $var2 ] || [ $var1 != $var2 ];
+        do
+
+            echo -e "\n\nPlease, enter the password for the user \"root\" for the database :"
+
+            read -s -p "Password : " var1
+
+            echo
+
+            read -s -p "Repeat : " var2
+
+            echo
+
+        done
+
+        DbRootPassword="$var1"
+
+        var1=""
+        var2=""
+
+        while [ -z $var1 ] || [ -z $var2 ] || [ $var1 != $var2 ]; do
+
+            echo -e "\n\nPlease, enter the password for the user \"glpi\" for the database :"
+
+            read -s -p "Password : " var1
+
+            echo
+
+            read -s -p "Repeat : " var2
+
+            echo
+
+        done
+
+        DbUserPassword="$var1"
+
+    fi
 
 else
 
-    GenDBPass="False"
-
-    var1=""
-    var2=""
-
-    while [ -z $var1 ] || [ -z $var2 ] || [ $var1 != $var2 ];
-    do
-
-        echo -e "\n\nPlease, enter the password for the user \"root\" for the database :"
-
-        read -s -p "Password : " var1
-
-        echo
-
-        read -s -p "Repeat : " var2
-
-        echo
-
-    done
-
-    DbRootPassword="$var1"
-
-    var1=""
-    var2=""
-
-    while [ -z $var1 ] || [ -z $var2 ] || [ $var1 != $var2 ]; do
-
-        echo -e "\n\nPlease, enter the password for the user \"glpi\" for the database :"
-
-        read -s -p "Password : " var1
-
-        echo
-
-        read -s -p "Repeat : " var2
-
-        echo
-
-    done
-
-    DbUserPassword="$var1"
+    InstallMariaDB="False"
 
 fi
 
@@ -321,7 +343,14 @@ do
 
     echo -e "\nLink for GLPI : $glpi_link\n"
 
-    echo -e "Generate passwords for db : $GenDBPass\n"
+    echo -e "Add MariaDB : $InstallMariaDB\n"
+
+    if [ "$InstallMariaDB" = "True" ];
+    then
+
+        echo -e "Generate passwords for db : $GenDBPass\n"
+
+    fi
 
     if [ -z $Tz1 ];
     then
@@ -373,59 +402,82 @@ fi
 
 echo -e "\n---------------------------------------------------------\nUpdating the packages...\n"
 
-apt update -y && apt upgrade -y
+apt update -y
+apt upgrade -y
 
 echo -e "\n---------------------------------------------------------\nInstalling web services...\n"
 
-apt install apache2 php libapache2-mod-php mariadb-server -y
+apt install apache2 -y
+apt install php -y
+apt install libapache2-mod-php -y
+
+if [ "$InstallMariaDB" = "True" ];
+then
+
+    apt install mariadb-server -y
+
+fi
 
 echo -e "\n---------------------------------------------------------\nInstalling php...\n"
 
-apt install php-mysqli php-mbstring php-curl php-gd php-simplexml php-intl php-ldap php-apcu php-xmlrpc php-cas php-zip php-bz2 php-ldap php-imap -y
+apt install php-mysqli -y
+apt install php-mbstring -y
+apt install php-curl -y
+apt install php-gd -y
+apt install php-simplexml -y
+apt install php-intl -y
+apt install php-ldap -y
+apt install php-apcu -y
+apt install php-xmlrpc -y
+apt install php-cas -y
+apt install php-zip -y
+apt install php-bz2 -y
+apt install php-ldap -y
+apt install php-imap -y
 
 echo -e "\n---------------------------------------------------------\nRemoving useless packages...\n"
 
 apt autoremove -y
 
-echo -e "\n---------------------------------------------------------\nConfiguring databases...\n"
-
-if [[ "$GenDBPass" == "True" ]];
+if [ "$InstallMariaDB" == "True" ];
 then
 
-    DbRootPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+    echo -e "\n---------------------------------------------------------\nConfiguring databases...\n"
 
-    echo -e "\n\nThe password for the user \"root\" for the database is : $DbRootPassword" > $HOMEpath/PASSWORDS.txt
+    if [[ "$GenDBPass" == "True" ]];
+    then
 
-    DbUserPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+        DbRootPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-    echo -e "\nThe password for the user \"glpi\" for the database is : $DbUserPassword\n\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
+        echo -e "\n\nThe password for the user \"root\" for the database is : $DbRootPassword" > $HOMEpath/PASSWORDS.txt
 
-    chmod 700 $HOMEpath/PASSWORDS.txt
+        DbUserPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+
+        echo -e "\nThe password for the user \"glpi\" for the database is : $DbUserPassword\n\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
+
+        chmod 700 $HOMEpath/PASSWORDS.txt
+
+    fi
+
+    mysql -u root -e "CREATE DATABASE glpi;"
+
+    mysql -u root -e "GRANT ALL PRIVILEGES ON glpi.* to 'glpi'@'localhost' IDENTIFIED BY '$DbUserPassword';"
+
+    mysql -u root -e "DROP USER IF EXISTS ''@'localhost';"
+
+    mysql -u root -e "DROP DATABASE IF EXISTS test;"
+
+    mysql -u root -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+
+    mysql -u root -e "FLUSH PRIVILEGES;"
+
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$DbRootPassword';"
 
 fi
 
-mysql -u root -e "CREATE DATABASE glpi;"
-
-mysql -u root -e "GRANT ALL PRIVILEGES ON glpi.* to 'glpi'@'localhost' IDENTIFIED BY '$DbUserPassword';"
-
-mysql -u root -e "DROP USER IF EXISTS ''@'localhost';"
-
-mysql -u root -e "DROP DATABASE IF EXISTS test;"
-
-mysql -u root -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-
-mysql -u root -e "FLUSH PRIVILEGES;"
-
-mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$DbRootPassword';"
-
 echo -e "---------------------------------------------------------\nConfiguring apache...\n"
 
-sed -i "/DocumentRoot/a\\
-\t<Directory /var/www/html/glpi>\n\
-\tOptions Indexes FollowSymLinks\n\
-\tAllowOverride All\n\
-\tRequire all granted\n\
-\t</Directory>\n" /etc/apache2/sites-available/000-default.conf
+sed -i "/DocumentRoot/a\\\t<Directory \/var\/www\/html\/glpi>\n\t\t\tOptions Indexes FollowSymLinks\n\t\t\tAllowOverride All\n\t\t\tRequire all granted\n\t<\/Directory>\n" /etc/apache2/sites-available/000-default.conf
 
 sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/glpi/g" /etc/apache2/sites-available/000-default.conf
 
@@ -463,7 +515,7 @@ chown -R www-data:www-data /var/www/html
 
 echo -e "\n---------------------------------------------------------\nConfiguring php...\n"
 
-phpv=$(ls /etc/php/)
+phpv=$(ls -F /etc/php/ | grep / | head -1 | cut -d'/' -f1)
 
 if [ ! -z $Tz2 ];
 then
@@ -519,15 +571,19 @@ then
 
 	echo -e "\n---------------------------------------------------------\nConfiguring SSL/TLS...\n"
 
+    sed -i -e "s/;session.cookie_secure =/session.cookie_secure = On/g" /etc/php/$phpv/apache2/php.ini
+
+    sed -i -e "s/session.cookie_httponly =/session.cookie_httponly = On/g" /etc/php/$phpv/apache2/php.ini
+
 	apt-get install libnss3-tools -y
 
 	mkdir /etc/ssl/glpi
 
 	cd /etc/ssl/glpi
 
-	openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout CAroot.key -out CAroot.pem -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName"
+	openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout rootCA.key -out rootCA.pem -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName"
 
-	openssl x509 -outform pem -in CAroot.pem -out CAroot.crt
+	openssl x509 -outform pem -in rootCA.pem -out rootCA.crt
 
 	echo -e "authorityKeyIdentifier=keyid,issuer\nbasicConstraints=CA:FALSE\nkeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\nsubjectAltName = @alt_names\n[alt_names]\nIP.1 = $addr\nDNS.1 = $WebSiteName\nDNS.2 = $HostName" > domains.ext
 
@@ -535,13 +591,11 @@ then
 
 	cp GLPI.key /etc/ssl/private/
 
-	openssl x509 -req -sha256 -days 1024 -in GLPI.csr -CA CAroot.pem -CAkey CAroot.key -CAcreateserial -extfile domains.ext -out GLPI.crt
+	openssl x509 -req -sha256 -days 1024 -in GLPI.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -extfile domains.ext -out GLPI.crt
 
 	cp GLPI.crt /etc/ssl/certs/
 
     sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/glpi/g" /etc/apache2/sites-available/default-ssl.conf
-
-    sed -i "s/<Directory \/var\/www\/html>/<Directory \/var\/www\/html\/glpi>/g" /etc/apache2/sites-available/default-ssl.conf
 
 	sed -i "/DocumentRoot/i\\\t\tServerName $WebSiteName" /etc/apache2/sites-available/default-ssl.conf
 
@@ -549,7 +603,7 @@ then
 
 	sed -i -e "s/SSLCertificateKeyFile.*/SSLCertificateKeyFile\t\/etc\/ssl\/private\/GLPI.key/g" /etc/apache2/sites-available/default-ssl.conf
 
-	sed -i "/DocumentRoot/a\\\t\t<Directory \/var\/www\/html>\n\t\tOptions Indexes FollowSymLinks\n\t\tAllowOverride All\n\t\tRequire all granted\n\t\t<\/Directory>" /etc/apache2/sites-available/default-ssl.conf
+	sed -i "/DocumentRoot/a\\\t\t<Directory \/var\/www\/html\/glpi>\n\t\t\tOptions Indexes FollowSymLinks\n\t\t\tAllowOverride All\n\t\t\tRequire all granted\n\t\t<\/Directory>" /etc/apache2/sites-available/default-ssl.conf
 
 	sed -i "/DocumentRoot/i\\\tServerName $WebSiteName\n\tRedirect \/ https:\/\/$addr\/" /etc/apache2/sites-available/000-default.conf
 
@@ -559,9 +613,9 @@ then
 
 	a2ensite default-ssl
 
-	cp /etc/ssl/glpi/CAroot.crt $HOMEpath
+	cp /etc/ssl/glpi/rootCA.crt $HOMEpath
 
-	cp /etc/ssl/glpi/CAroot.pem $HOMEpath
+	cp /etc/ssl/glpi/rootCA.pem $HOMEpath
 
 fi
 
