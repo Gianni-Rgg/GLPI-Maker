@@ -139,9 +139,9 @@ read Tz1
 if [ ! -z $Tz1 ];
 then
 
-	echo -e "\nPlease, specify the nearest city of the time zone where the server is (For exemple \"Paris\") :"
+        echo -e "\nPlease, specify the nearest city of the time zone where the server is (For exemple \"Paris\") :"
 
-	read Tz2
+        read Tz2
 
 fi
 
@@ -165,7 +165,7 @@ then
 
     until [ "$rep" = "y" ] || [ "$rep" = "n" ];
     do
-    
+
         echo -e "\nDo you want to download Fusion Inventory ? (y/n)"
 
         read rep
@@ -221,61 +221,61 @@ done
 if [ "$rep" = "y" ];
 then
 
-	AddHTTPS="True"
+        AddHTTPS="True"
 
-	while [ -z $HostName ];
-	do
+        while [ -z $HostName ];
+        do
 
-	echo -e "\nWhat will be the host name of the website ? For exemple in \"glpi.mydom.local\" this will be \"glpi\""
-	read HostName
+        echo -e "\nWhat will be the host name of the website ? For exemple in \"glpi.mydom.local\" this will be \"glpi\""
+        read HostName
 
-	done
+        done
 
     while [ -z $DomainName ];
-	do
+        do
 
-	echo -e "\nWhat will be the domain name of the website ? For exemple in \"glpi.mydom.local\" this will be \"mydom.local\""
-	read DomainName
+        echo -e "\nWhat will be the domain name of the website ? For exemple in \"glpi.mydom.local\" this will be \"mydom.local\""
+        read DomainName
 
-	done
+        done
 
     WebSiteName=$(echo "$HostName.$DomainName")
 
-	while [ -z $Country ];
-	do
+        while [ -z $Country ];
+        do
 
-	echo -e "\nWhat country code will be displayed on the certificate ? For example FR (for France)"
-	read Country
+        echo -e "\nWhat country code will be displayed on the certificate ? For example FR (for France)"
+        read Country
 
-	done
+        done
 
-	while [ -z $State ];
-	do
+        while [ -z $State ];
+        do
 
-	echo -e "\nWhich state will be displayed on the certificate ? For exemple \"Ile-De-France\""
-	read State
+        echo -e "\nWhich state will be displayed on the certificate ? For exemple \"Ile-De-France\""
+        read State
 
-	done
+        done
 
-	while [ -z $City ];
-	do
+        while [ -z $City ];
+        do
 
-	echo -e "\nWhich city will be displayed on the certificate ? For exemple \"Paris\""
-	read City
+        echo -e "\nWhich city will be displayed on the certificate ? For exemple \"Paris\""
+        read City
 
-	done
+        done
 
-	while [ -z $Company ];
-	do
+        while [ -z $Company ];
+        do
 
-	echo -e "\nWhich company will be displayed on the certificate ?"
-	read Company
+        echo -e "\nWhich company will be displayed on the certificate ?"
+        read Company
 
-	done
+        done
 
 else
 
-	AddHTTPS="False"
+        AddHTTPS="False"
 
 fi
 
@@ -360,7 +360,7 @@ do
     else
 
         echo -e "Timezone : $Tz1/$Tz2\n"
-    
+
     fi
 
     echo -e "Add Fusion Inventory : $AddFusionInventory\n"
@@ -435,6 +435,11 @@ apt install php-bz2 -y
 apt install php-ldap -y
 apt install php-imap -y
 
+echo -e "\n---------------------------------------------------------\nInstalling email service...\n"
+
+apt install mailutils -y
+
+
 echo -e "\n---------------------------------------------------------\nRemoving useless packages...\n"
 
 apt autoremove -y
@@ -469,6 +474,8 @@ then
 
     mysql -u root -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
 
+    mysql -u root -e "GRANT SELECT ON \`mysql\`.\`time_zone_name\` TO 'glpi'@'localhost';"
+
     mysql -u root -e "FLUSH PRIVILEGES;"
 
     mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$DbRootPassword';"
@@ -477,50 +484,64 @@ fi
 
 echo -e "---------------------------------------------------------\nConfiguring apache...\n"
 
-sed -i "/DocumentRoot/a\\\t<Directory \/var\/www\/html\/glpi>\n\t\t\tOptions Indexes FollowSymLinks\n\t\t\tAllowOverride All\n\t\t\tRequire all granted\n\t<\/Directory>\n" /etc/apache2/sites-available/000-default.conf
+cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/glpi.conf
 
-sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/glpi/g" /etc/apache2/sites-available/000-default.conf
+sed -i "/DocumentRoot/a\\\t<Directory \/var\/www\/glpi\/public>\n\t\t\tRequire all granted\n\t\t\tRewriteEngine On\n\t\t\tRewriteCond %{HTTP:Authorization} ^(.+)$\n\t\t\tRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\n\t\t\tRewriteCond %{REQUEST_FILENAME} !-f\n\t\t\tRewriteRule ^(.*)$ index.php [QSA,L]\n\t<\/Directory>\n" /etc/apache2/sites-available/glpi.conf
+
+sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/glpi\/public/g" /etc/apache2/sites-available/glpi.conf
+
+sed -i "/DocumentRoot/a\\\tHeader always set X-Frame-Options DENY\n" /etc/apache2/sites-available/glpi.conf
+
+sed -i "/DocumentRoot/a\\\tHeader always set X-Content-Type-Options nosniff\n" /etc/apache2/sites-available/glpi.conf
+
+sed -i "/DocumentRoot/a\\\tHeader always set Content-Security-Policy \"default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'\"\n" /etc/apache2/sites-available/glpi.conf
+
+a2enmod headers
+
+a2ensite glpi
+
+a2enmod php*
+
+sudo a2enmod rewrite
+
+sudo a2dissite 000-default.conf
 
 echo -e "---------------------------------------------------------\nInstallating GLPI...\n"
 
-if [ -d "/tmp/install" ]; 
+tmp_install_path="/tmp/glpi_install"
+
+if [ -d $tmp_install_path ];
 then
 
-    rm -rf /tmp/install
+    rm -rf "$tmp_install_path"
 
 fi
 
-mkdir -p /tmp/install/GLPI-Sources
-
-cd /tmp/install/GLPI-Sources
+mkdir -p "$tmp_install_path/GLPI-Sources"
 
 if [ "$UseWebForGLPI" = "True" ];
 then
 
-    wget "$glpi_link"
+    wget -P "$tmp_install_path/GLPI-Sources" "$glpi_link"
 
 else
 
-    mv "$glpi_link" .
+    mv "$glpi_link" "$tmp_install_path/GLPI-Sources"
 
 fi
 
-tar -xvzf $(ls)
+tar -xvzf "$tmp_install_path/GLPI-Sources/$(ls $tmp_install_path/GLPI-Sources | head -n 1)" -C "$tmp_install_path/GLPI-Sources"
 
-rm /var/www/html/index.html
-
-cp -r glpi /var/www/html/
-
-chown -R www-data:www-data /var/www/html
+cp -r "$tmp_install_path/GLPI-Sources/glpi" "/var/www"
 
 echo -e "\n---------------------------------------------------------\nConfiguring php...\n"
 
-phpv=$(ls -F /etc/php/ | grep / | head -1 | cut -d'/' -f1)
+phpv=$(ls -F /etc/php/ | grep / | head -n 1 | cut -d'/' -f1)
 
 if [ ! -z $Tz2 ];
 then
 
-	sed -i -e "s/;date.timezone =/date.timezone = "$Tz1"\/"$Tz2"/g" /etc/php/$phpv/cli/php.ini
+        sed -i -e "s/;date.timezone =/date.timezone = "$Tz1"\/"$Tz2"/g" /etc/php/$phpv/cli/php.ini
 
 fi
 
@@ -530,92 +551,121 @@ sed -i -e "s/file_uploads = off/file_uploads = on/g" /etc/php/$phpv/cli/php.ini
 
 sed -i -e "s/memory_limit =.*/memory_limit = -1/g" /etc/php/$phpv/cli/php.ini
 
-echo "* * * * * php /var/www/html/glpi/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/root
+sed -i -e "s/;session.cookie_secure =/session.cookie_secure = On/g" /etc/php/$phpv/cli/php.ini
 
-chown root:crontab /var/spool/cron/crontabs/root
+sed -i -e "s/^session.cookie_httponly =*$/session.cookie_httponly = On/g" /etc/php/$phpv/cli/php.ini
+
+sed -i -e "s/^session.cookie_samesite =*$/session.cookie_samesite = Lax/g" /etc/php/$phpv/cli/php.ini
+
+echo "* * * * * php /var/www/glpi/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/www-data
+
+chown www-data:crontab /var/spool/cron/crontabs/www-data
 
 if [ "$AddFusionInventory" = "True" ];
 then
 
     echo -e "---------------------------------------------------------\nInstalling Fusion Inventory...\n"
 
-    mkdir -p /tmp/install/FusionInventory-Sources
-
-    cd /tmp/install/FusionInventory-Sources
+    mkdir -p "$tmp_install_path/FusionInventory-Sources"
 
     if [ "$UseWebForFI" = "True" ];
     then
 
-        wget "$fi_link"
+        wget -P "$tmp_install_path/FusionInventory-Sources" "$fi_link"
 
     else
 
-        mv "$fi_link" .
+        mv "$fi_link" "$tmp_install_path/FusionInventory-Sources"
 
     fi
 
-    tar -xvf $(ls)
+    tar -xvf "$tmp_install_path/FusionInventory-Sources/$(ls $tmp_install_path/FusionInventory-Sources/ | head -n 1)" -C "$tmp_install_path/FusionInventory-Sources"
 
-    cp -r fusioninventory /var/www/html/glpi/plugins/
+    cp -r "$tmp_install_path/FusionInventory-Sources/fusioninventory" "/var/www/glpi/plugins/"
 
-    chown -R www-data:www-data /var/www/html/glpi/plugins
-
-    rm /var/www/html/glpi/plugins/remove.txt
+    rm "/var/www/glpi/plugins/remove.txt"
 
 fi
 
-addr=$(hostname -I | awk '$1=$1')
+addr=$(hostname -I | grep -oP '^\S+' | awk '/^[0-9]/ {print $1}')
 
 if [ "$AddHTTPS" = "True" ];
 then
 
-	echo -e "\n---------------------------------------------------------\nConfiguring SSL/TLS...\n"
+        echo -e "\n---------------------------------------------------------\nConfiguring SSL/TLS...\n"
 
-    sed -i -e "s/;session.cookie_secure =/session.cookie_secure = On/g" /etc/php/$phpv/apache2/php.ini
+        sed -i -e "s/;session.cookie_secure =/session.cookie_secure = On/g" /etc/php/$phpv/apache2/php.ini
 
-    sed -i -e "s/session.cookie_httponly =/session.cookie_httponly = On/g" /etc/php/$phpv/apache2/php.ini
+        sed -i -e "s/session.cookie_httponly =/session.cookie_httponly = On/g" /etc/php/$phpv/apache2/php.ini
 
-	apt-get install libnss3-tools -y
+        apt-get install libnss3-tools -y
 
-	mkdir /etc/ssl/glpi
+        ssl_install_path="/etc/ssl/glpi"
 
-	cd /etc/ssl/glpi
+        mkdir $ssl_install_path
 
-	openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout rootCA.key -out rootCA.pem -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName"
+        openssl req -x509 -nodes -new -sha256 -days 5475 -newkey rsa:2048 -keyout "$ssl_install_path/rootCA.key" -out "$ssl_install_path/rootCA.pem" -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=Root CA $Company/OU=CA"
 
-	openssl x509 -outform pem -in rootCA.pem -out rootCA.crt
+        openssl x509 -outform pem -in "$ssl_install_path/rootCA.pem" -out "$ssl_install_path/rootCA.crt"
 
-	echo -e "authorityKeyIdentifier=keyid,issuer\nbasicConstraints=CA:FALSE\nkeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\nsubjectAltName = @alt_names\n[alt_names]\nIP.1 = $addr\nDNS.1 = $WebSiteName\nDNS.2 = $HostName" > domains.ext
+        echo -e "authorityKeyIdentifier=keyid,issuer\nbasicConstraints=CA:FALSE\nkeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\nsubjectAltName = @alt_names\n[alt_names]\nIP.1 = $addr\nDNS.1 = $WebSiteName\nDNS.2 = $HostName" > "$ssl_install_path/domains.ext"
 
-	openssl req -new -nodes -newkey rsa:2048 -keyout GLPI.key -out GLPI.csr -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName"
+        openssl req -new -nodes -newkey rsa:2048 -keyout "$ssl_install_path/GLPI.key" -out "$ssl_install_path/GLPI.csr" -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$WebSiteName/OU=Web Site"
 
-	cp GLPI.key /etc/ssl/private/
+        cp "$ssl_install_path/GLPI.key" "/etc/ssl/private/"
 
-	openssl x509 -req -sha256 -days 1024 -in GLPI.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -extfile domains.ext -out GLPI.crt
+        openssl x509 -req -sha256 -days 1825 -in "$ssl_install_path/GLPI.csr" -CA "$ssl_install_path/rootCA.pem" -CAkey "$ssl_install_path/rootCA.key" -CAcreateserial -extfile "$ssl_install_path/domains.ext" -out "$ssl_install_path/GLPI.crt"
 
-	cp GLPI.crt /etc/ssl/certs/
+        cp "$ssl_install_path/GLPI.crt" "/etc/ssl/certs/"
 
-    sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/glpi/g" /etc/apache2/sites-available/default-ssl.conf
+        cp "/etc/apache2/sites-available/default-ssl.conf" "/etc/apache2/sites-available/glpi-ssl.conf"
 
-	sed -i "/DocumentRoot/i\\\t\tServerName $WebSiteName" /etc/apache2/sites-available/default-ssl.conf
+        sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/glpi\/public/g" /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i -e "s/SSLCertificateFile.*/SSLCertificateFile\t\/etc\/ssl\/certs\/GLPI.crt/g" /etc/apache2/sites-available/default-ssl.conf
+        sed -i "/DocumentRoot/i\\\tServerName $WebSiteName" /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i -e "s/SSLCertificateKeyFile.*/SSLCertificateKeyFile\t\/etc\/ssl\/private\/GLPI.key/g" /etc/apache2/sites-available/default-ssl.conf
+        sed -i -e "s/SSLCertificateFile.*/SSLCertificateFile\t\/etc\/ssl\/certs\/GLPI.crt/g" /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i "/DocumentRoot/a\\\t\t<Directory \/var\/www\/html\/glpi>\n\t\t\tOptions Indexes FollowSymLinks\n\t\t\tAllowOverride All\n\t\t\tRequire all granted\n\t\t<\/Directory>" /etc/apache2/sites-available/default-ssl.conf
+        sed -i -e "s/SSLCertificateKeyFile.*/SSLCertificateKeyFile\t\/etc\/ssl\/private\/GLPI.key/g" /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i "/DocumentRoot/i\\\tServerName $WebSiteName\n\tRedirect \/ https:\/\/$addr\/" /etc/apache2/sites-available/000-default.conf
+        sed -i "/DocumentRoot/a\\\t<Directory \/var\/www\/glpi\/public>\n\t\t\tRequire all granted\n\t\t\tRewriteEngine On\n\t\t\tRewriteCond %{HTTP:Authorization} ^(.+)$\n\t\t\tRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\n\t\t\tRewriteCond %{REQUEST_FILENAME} !-f\n\t\t\tRewriteRule ^(.*)$ index.php [QSA,L]\n\t<\/Directory>\n" /etc/apache2/sites-available/glpi-ssl.conf
 
-	echo "ServerName $WebSiteName" >> /etc/apache2/apache2.conf
+	sed -i "/DocumentRoot/a\\\tHeader always set X-Frame-Options DENY\n" /etc/apache2/sites-available/glpi-ssl.conf
 
-	a2enmod ssl
+	sed -i "/DocumentRoot/a\\\tHeader always set X-Content-Type-Options nosniff\n" /etc/apache2/sites-available/glpi-ssl.conf
 
-	a2ensite default-ssl
+	sed -i "/DocumentRoot/a\\\tHeader always set Content-Security-Policy \"default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'\"\n" /etc/apache2/sites-available/glpi-ssl.conf
 
-	cp /etc/ssl/glpi/rootCA.crt $HOMEpath
+        sed -i "/DocumentRoot/i\\\tServerName $WebSiteName\n\tRedirect \/ https:\/\/$WebSiteName\/" /etc/apache2/sites-available/glpi.conf
 
-	cp /etc/ssl/glpi/rootCA.pem $HOMEpath
+	sed -i '/<\/VirtualHost>/i \ \ \ \ ErrorLog ${APACHE_LOG_DIR}/ssl_error.log\n\ \ \ \ CustomLog ${APACHE_LOG_DIR}/ssl_access.log combined\n' /etc/apache2/sites-available/glpi-ssl.conf
+
+	sed -i '/ErrorLog ${APACHE_LOG_DIR}\/error.log/d; /CustomLog ${APACHE_LOG_DIR}\/access.log combined/d' /etc/apache2/sites-available/glpi-ssl.conf
+
+	sed -i '/<FilesMatch/,/<\/FilesMatch>/d; /<Directory \/usr\/lib\/cgi-bin/,/<\/Directory>/d' /etc/apache2/sites-available/glpi-ssl.conf
+
+        echo "ServerName $WebSiteName" >> /etc/apache2/apache2.conf
+
+        a2enmod ssl
+
+        a2ensite glpi-ssl
+
+        cp "$ssl_install_path/rootCA.crt" "$HOMEpath"
+
+        cp "$ssl_install_path/rootCA.pem" "$HOMEpath"
+
+fi
+
+if [ "$InstallMariaDB" = "True" ];
+then
+
+echo -e "\n---------------------------------------------------------\nConfiguring GLPI...\n"
+
+php /var/www/glpi/bin/console db:install --db-name=glpi --db-user=glpi --db-password=$DbUserPassword -n
+
+chown -R www-data:www-data /var/www/glpi
+
+mv /var/www/glpi/install/install.php /var/www/glpi/install/install.php.old
 
 fi
 
@@ -648,7 +698,7 @@ echo -e "\n---------------------------------------------------------\nConfigurin
 
 apt install fail2ban -y
 
-cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local 
+cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 
 sed -i "s/port    = ssh/port    = $SSHPort/g" /etc/fail2ban/jail.local
 
@@ -675,7 +725,7 @@ service fail2ban restart
 
 service apache2 restart
 
-echo -e "----------------------------------------------------------------\n\nTo continue the installation, go to : http://$addr/\n"
+echo -e "----------------------------------------------------------------\n\nTo continue the installation, go to : http://$WebSiteName/\n"
 
 if [ "$AddFirewall" = "True" ];
 then

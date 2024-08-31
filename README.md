@@ -22,10 +22,6 @@ Follow the instructions and everything's gonna be alright ! ;)
 
 If you choose to configure HTTPS access with the script, the certificates will be available in your root directory.
 
-The ".crt" file allows the HTTPS connection to your server from most browsers (like Chrome or Edge for example).
-
-The ".pem" file allows the HTTPS connection to your server from browsers like Mozilla Firefox.
-
 All the files used to generate the certificates are available in :
 ```
 /etc/ssl/glpi
