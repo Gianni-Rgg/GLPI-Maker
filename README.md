@@ -39,9 +39,6 @@ If you had chosen this option when running the script, you can display the gener
 sudo cat /root/PASSWORDS.txt
 ```
 
-After the web configuration, you must secure GLPI with :
-```
-sudo rm /var/www/html/glpi/install/install.php
-```
+After the script configurations you will need to change the default passwords.
 
 Enjoy !
