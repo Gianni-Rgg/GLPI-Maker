@@ -212,7 +212,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to configure SSL/TLS with a new Certification Authority (for HTTPS access) ? (y/n)\nThe script will automatically create self signed CA certificates and configure apache for this.\nIn the case where you would already have a CA, you will be able to replace the certificates in the apache ssl configuration file."
+    echo -e "\nDo you want to configure SSL/TLS with a new Certification Authority (for HTTPS access) ? (y/n)\nThe script will automatically create a CA with signed certificate and configure apache for this.\nIn the case where you would already have a CA, you will be able to replace the certificates in the apache ssl configuration file."
 
     read rep
 
@@ -223,23 +223,16 @@ then
 
         AddHTTPS="True"
 
-        while [ -z $HostName ];
+        while [ -z $WebSiteName ];
         do
 
-        echo -e "\nWhat will be the host name of the website ? For exemple in \"glpi.mydom.local\" this will be \"glpi\""
-        read HostName
+        echo -e "\nWhat will be the domain name of the website ? For exemple \"glpi.mydom.local\""
+        read WebSiteName
 
         done
 
-    while [ -z $DomainName ];
-        do
-
-        echo -e "\nWhat will be the domain name of the website ? For exemple in \"glpi.mydom.local\" this will be \"mydom.local\""
-        read DomainName
-
-        done
-
-    WebSiteName=$(echo "$HostName.$DomainName")
+        HostName=$(echo "$WebSiteName" | cut -d'.' -f1)
+        DomainName=$(echo "$WebSiteName" | cut -d'.' -f2-)
 
         while [ -z $Country ];
         do
@@ -435,32 +428,27 @@ apt install php-bz2 -y
 apt install php-ldap -y
 apt install php-imap -y
 
-echo -e "\n---------------------------------------------------------\nInstalling email service...\n"
-
-apt install mailutils -y
-
-
-echo -e "\n---------------------------------------------------------\nRemoving useless packages...\n"
+echo -e "\n---------------------------------------------------------\nConfiguring OS...\n"
 
 apt autoremove -y
+
+timedatectl set-timezone "$Tz1"/"$Tz2"
 
 if [ "$InstallMariaDB" == "True" ];
 then
 
-    echo -e "\n---------------------------------------------------------\nConfiguring databases...\n"
+    echo -e "\n---------------------------------------------------------\nConfiguring database...\n"
 
     if [[ "$GenDBPass" == "True" ]];
     then
 
         DbRootPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-        echo -e "\n\nThe password for the user \"root\" for the database is : $DbRootPassword" > $HOMEpath/PASSWORDS.txt
+        echo -e "\n\nThe password for the user \"root\" from the database is : $DbRootPassword" > $HOMEpath/PASSWORDS.txt
 
         DbUserPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-        echo -e "\nThe password for the user \"glpi\" for the database is : $DbUserPassword\n\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
-
-        chmod 700 $HOMEpath/PASSWORDS.txt
+        echo -e "\nThe password for the user \"glpi\" from the database is : $DbUserPassword\n" >> $HOMEpath/PASSWORDS.txt
 
     fi
 
@@ -476,6 +464,8 @@ then
 
     mysql -u root -e "GRANT SELECT ON \`mysql\`.\`time_zone_name\` TO 'glpi'@'localhost';"
 
+    mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
+
     mysql -u root -e "FLUSH PRIVILEGES;"
 
     mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$DbRootPassword';"
@@ -490,23 +480,25 @@ sed -i "/DocumentRoot/a\\\t<Directory \/var\/www\/glpi\/public>\n\t\t\tRequire a
 
 sed -i "s/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/glpi\/public/g" /etc/apache2/sites-available/glpi.conf
 
+sed -i '/<\/Directory>/i\\t<IfModule mod_authz_core.c>\n\t\tRequire local\n\t<\/IfModule>\n\t<IfModule !mod_authz_core.c>\n\t\torder deny,allow\n\t\tdeny from all\n\t\tallow from 127.0.0.1\n\t\tallow from ::1\n\t<\/IfModule>\n\tErrorDocument 403 \"<p><b>Restricted area.<\/b><br \/>Only local access allowed.<br \/>Check your configuration or contact your administrator.<\/p>\"' /etc/apache2/sites-available/glpi.conf
+
 sed -i "/DocumentRoot/a\\\tHeader always set X-Frame-Options DENY\n" /etc/apache2/sites-available/glpi.conf
 
 sed -i "/DocumentRoot/a\\\tHeader always set X-Content-Type-Options nosniff\n" /etc/apache2/sites-available/glpi.conf
 
-sed -i "/DocumentRoot/a\\\tHeader always set Content-Security-Policy \"default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'\"\n" /etc/apache2/sites-available/glpi.conf
+sed -i "/DocumentRoot/a\\\tHeader always set Content-Security-Policy \"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://$WebSiteName; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; media-src 'self'; object-src 'none'; frame-ancestors 'self';\"" /etc/apache2/sites-available/glpi.conf
 
 a2enmod headers
 
 a2ensite glpi
 
+a2dissite 000-default.conf
+
 a2enmod php*
 
-sudo a2enmod rewrite
+a2enmod rewrite
 
-sudo a2dissite 000-default.conf
-
-echo -e "---------------------------------------------------------\nInstallating GLPI...\n"
+echo -e "\n---------------------------------------------------------\nInstallating GLPI...\n"
 
 tmp_install_path="/tmp/glpi_install"
 
@@ -604,7 +596,7 @@ then
 
         mkdir $ssl_install_path
 
-        openssl req -x509 -nodes -new -sha256 -days 5475 -newkey rsa:2048 -keyout "$ssl_install_path/rootCA.key" -out "$ssl_install_path/rootCA.pem" -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=Root CA $Company/OU=CA"
+        openssl req -x509 -nodes -new -sha256 -days 5475 -newkey rsa:2048 -keyout "$ssl_install_path/rootCA.key" -out "$ssl_install_path/rootCA.pem" -subj "/C=$Country/ST=$State/L=$City/O=$Company/CN=$Company Root CA/OU=CA"
 
         openssl x509 -outform pem -in "$ssl_install_path/rootCA.pem" -out "$ssl_install_path/rootCA.crt"
 
@@ -630,21 +622,21 @@ then
 
         sed -i "/DocumentRoot/a\\\t<Directory \/var\/www\/glpi\/public>\n\t\t\tRequire all granted\n\t\t\tRewriteEngine On\n\t\t\tRewriteCond %{HTTP:Authorization} ^(.+)$\n\t\t\tRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\n\t\t\tRewriteCond %{REQUEST_FILENAME} !-f\n\t\t\tRewriteRule ^(.*)$ index.php [QSA,L]\n\t<\/Directory>\n" /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i "/DocumentRoot/a\\\tHeader always set X-Frame-Options DENY\n" /etc/apache2/sites-available/glpi-ssl.conf
+        sed -i "/DocumentRoot/a\\\tHeader always set X-Frame-Options DENY\n" /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i "/DocumentRoot/a\\\tHeader always set X-Content-Type-Options nosniff\n" /etc/apache2/sites-available/glpi-ssl.conf
+        sed -i "/DocumentRoot/a\\\tHeader always set X-Content-Type-Options nosniff\n" /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i "/DocumentRoot/a\\\tHeader always set Content-Security-Policy \"default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'\"\n" /etc/apache2/sites-available/glpi-ssl.conf
+        sed -i "/DocumentRoot/a\\\tHeader always set Content-Security-Policy \"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://$WebSiteName; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; media-src 'self'; object-src 'none'; frame-ancestors 'self';\"\n" /etc/apache2/sites-available/glpi-ssl.conf
 
         sed -i "/DocumentRoot/i\\\tServerName $WebSiteName\n\tRedirect \/ https:\/\/$WebSiteName\/" /etc/apache2/sites-available/glpi.conf
 
-	sed -i '/<\/VirtualHost>/i \ \ \ \ ErrorLog ${APACHE_LOG_DIR}/ssl_error.log\n\ \ \ \ CustomLog ${APACHE_LOG_DIR}/ssl_access.log combined\n' /etc/apache2/sites-available/glpi-ssl.conf
+        sed -i '/<\/Directory>/i\\t<IfModule mod_authz_core.c>\n\t\tRequire local\n\t<\/IfModule>\n\t<IfModule !mod_authz_core.c>\n\t\torder deny,allow\n\t\tdeny from all\n\t\tallow from 127.0.0.1\n\t\tallow from ::1\n\t<\/IfModule>\n\tErrorDocument 403 \"<p><b>Restricted area.<\/b><br \/>Only local access allowed.<br \/>Check your configuration or contact your administrator.<\/p>\"' /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i '/ErrorLog ${APACHE_LOG_DIR}\/error.log/d; /CustomLog ${APACHE_LOG_DIR}\/access.log combined/d' /etc/apache2/sites-available/glpi-ssl.conf
+        sed -i '/<\/VirtualHost>/i \ \ \ \ ErrorLog ${APACHE_LOG_DIR}/ssl_error.log\n\ \ \ \ CustomLog ${APACHE_LOG_DIR}/ssl_access.log combined\n' /etc/apache2/sites-available/glpi-ssl.conf
 
-	sed -i '/<FilesMatch/,/<\/FilesMatch>/d; /<Directory \/usr\/lib\/cgi-bin/,/<\/Directory>/d' /etc/apache2/sites-available/glpi-ssl.conf
+        sed -i '/ErrorLog ${APACHE_LOG_DIR}\/error.log/d; /CustomLog ${APACHE_LOG_DIR}\/access.log combined/d' /etc/apache2/sites-available/glpi-ssl.conf
 
-        echo "ServerName $WebSiteName" >> /etc/apache2/apache2.conf
+        sed -i '/<FilesMatch/,/<\/FilesMatch>/d; /<Directory \/usr\/lib\/cgi-bin/,/<\/Directory>/d' /etc/apache2/sites-available/glpi-ssl.conf
 
         a2enmod ssl
 
@@ -659,13 +651,41 @@ fi
 if [ "$InstallMariaDB" = "True" ];
 then
 
-echo -e "\n---------------------------------------------------------\nConfiguring GLPI...\n"
+    echo -e "\n---------------------------------------------------------\nConfiguring GLPI...\n"
 
-php /var/www/glpi/bin/console db:install --db-name=glpi --db-user=glpi --db-password=$DbUserPassword -n
+    php /var/www/glpi/bin/console db:install --db-name=glpi --db-user=glpi --db-password=$DbUserPassword -n
 
-chown -R www-data:www-data /var/www/glpi
+    chown -R www-data:www-data /var/www/glpi
 
-mv /var/www/glpi/install/install.php /var/www/glpi/install/install.php.old
+    mv /var/www/glpi/install/install.php /var/www/glpi/install/install.php.old
+
+    WebGLPIpassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+
+    echo -e "\nThe password for the user \"glpi\" from the website is : $WebGLPIpassword" >> $HOMEpath/PASSWORDS.txt
+
+    WebPostOnlyPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+
+    echo -e "\nThe password for the user \"post-only\" from the website is : $WebPostOnlyPassword" >> $HOMEpath/PASSWORDS.txt
+
+    WebTechPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+
+    echo -e "\nThe password for the user \"tech\" from the website is : $WebTechPassword" >> $HOMEpath/PASSWORDS.txt
+
+    WebNormalPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
+
+    echo -e "\nThe password for the user \"normal\" from the website is : $WebNormalPassword\n\n" >> $HOMEpath/PASSWORDS.txt
+
+    mysql -u glpi -p"$DbUserPassword" -e "USE glpi; UPDATE glpi_users SET password=MD5('$WebGLPIpassword') WHERE name='glpi';"
+
+    mysql -u glpi -p"$DbUserPassword" -e "USE glpi; UPDATE glpi_users SET password=MD5('$WebPostOnlyPassword') WHERE name='post-only';"
+
+    mysql -u glpi -p"$DbUserPassword" -e "USE glpi; UPDATE glpi_users SET password=MD5('$WebTechPassword') WHERE name='tech';"
+
+    mysql -u glpi -p"$DbUserPassword" -e "USE glpi; UPDATE glpi_users SET password=MD5('$WebNormalPassword') WHERE name='normal';"
+
+    echo -e "\n\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
+
+    chmod 700 $HOMEpath/PASSWORDS.txt
 
 fi
 
@@ -686,8 +706,6 @@ then
 
     ufw allow 443/tcp
 
-    ufw allow 62354/tcp
-
     ufw default allow outgoing
 
     ufw default deny incoming
@@ -707,13 +725,29 @@ then
 
     echo -e "\n---------------------------------------------------------\nConfiguring ModSecurity...\n"
 
-    apt install modsecurity-crs -y
+    apt install libapache2-mod-security2 -y
 
     cp /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
+
+    echo -e "# Exclure la règle 920420 pour les requêtes GLPI-Agent\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920420,msg:'Exclusion de la règle 920420 pour GLPI Agent'\"" >> /etc/modsecurity/modsecurity.conf
+
+    echo -e "# Exclure la règle 949110 pour les requêtes GLPI-Agent\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000002,phase:1,pass,nolog,ctl:ruleRemoveById=949110,msg:'Exclusion de la règle 949110 pour GLPI Agent'\"" >> /etc/modsecurity/modsecurity.conf
+
+    echo -e "# Exclure la règle 980130 pour les requêtes GLPI-Agent\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000003,phase:1,pass,nolog,ctl:ruleRemoveById=980130,msg:'Exclusion de la règle 980130 pour GLPI Agent'\"" >> /etc/modsecurity/modsecurity.conf
 
     sed -i "s/SecRuleEngine DetectionOnly/SecRuleEngine On/g" /etc/modsecurity/modsecurity.conf
 
 fi
+
+echo -e "\n---------------------------------------------------------\nConfiguring AppArmor...\n"
+
+apt install apparmor-utils -y
+
+apt install rsyslog -y
+
+wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/config/usr.sbin.apache2 -P /etc/apparmor.d/
+
+aa-enforce /etc/apparmor.d/usr.sbin.apache2
 
 echo -e "\n---------------------------------------------------------\nRestarting services...\n"
 
@@ -725,7 +759,7 @@ service fail2ban restart
 
 service apache2 restart
 
-echo -e "----------------------------------------------------------------\n\nTo continue the installation, go to : http://$WebSiteName/\n"
+echo -e "----------------------------------------------------------------\n\nYou can now access to : http://$WebSiteName/\n"
 
 if [ "$AddFirewall" = "True" ];
 then

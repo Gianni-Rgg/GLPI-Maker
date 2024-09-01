@@ -11,7 +11,7 @@ https://github.com/glpi-project/glpi/releases/download/9.5.6/glpi-9.5.6.tgz
 
 The type of path is :
 ```
-/etc/home/username/glpi-9.5.6.tgz
+/home/username/glpi-9.5.6.tgz
 ```
 
 Follow the instructions and everything's gonna be alright ! ;)
@@ -34,11 +34,9 @@ To get/run the script use :
 wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/GLPI-Maker.sh && sudo bash GLPI-Maker.sh
 ```
 
-If you had chosen this option when running the script, you can display the generated passwords with :
+You can display the generated passwords with :
 ```
 sudo cat /root/PASSWORDS.txt
 ```
-
-After the script configurations you will need to change the default passwords.
 
 Enjoy !
