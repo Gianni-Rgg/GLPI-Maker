@@ -739,15 +739,17 @@ then
 
 fi
 
-echo -e "\n---------------------------------------------------------\nConfiguring AppArmor...\n"
+#echo -e "\n---------------------------------------------------------\nConfiguring AppArmor...\n"
 
-apt install apparmor-utils -y
+#apt install apparmor-utils -y
 
-apt install rsyslog -y
+#apt install rsyslog -y
 
-wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/config/usr.sbin.apache2 -P /etc/apparmor.d/
+#wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/config/usr.sbin.apache2 -P /etc/apparmor.d/
 
-aa-enforce /etc/apparmor.d/usr.sbin.apache2
+#aa-enforce /etc/apparmor.d/usr.sbin.apache2
+
+#apparmor_parser -r /etc/apparmor.d/usr.sbin.apache2
 
 echo -e "\n---------------------------------------------------------\nRestarting services...\n"
 
