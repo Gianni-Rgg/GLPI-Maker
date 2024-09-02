@@ -683,7 +683,7 @@ then
 
     mysql -u glpi -p"$DbUserPassword" -e "USE glpi; UPDATE glpi_users SET password=MD5('$WebNormalPassword') WHERE name='normal';"
 
-    echo -e "\n\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
+    echo -e "\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
 
     chmod 700 $HOMEpath/PASSWORDS.txt
 
@@ -710,6 +710,8 @@ then
 
     ufw default deny incoming
 
+    ufw enable
+
 fi
 
 echo -e "\n---------------------------------------------------------\nConfiguring fail2ban...\n"
@@ -729,27 +731,35 @@ then
 
     cp /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
 
-    echo -e "# Exclure la règle 920420 pour les requêtes GLPI-Agent\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920420,msg:'Exclusion de la règle 920420 pour GLPI Agent'\"" >> /etc/modsecurity/modsecurity.conf
+    echo -e "# Exclusion rules for GLPI-Agent queries\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000001,phase:1,pass,nolog,ctl:ruleRemoveById=920420,msg:'Rule excluded for GLPI-Agent queries'\"" >> /etc/modsecurity/modsecurity.conf
 
-    echo -e "# Exclure la règle 949110 pour les requêtes GLPI-Agent\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000002,phase:1,pass,nolog,ctl:ruleRemoveById=949110,msg:'Exclusion de la règle 949110 pour GLPI Agent'\"" >> /etc/modsecurity/modsecurity.conf
+    echo -e "\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000002,phase:1,pass,nolog,ctl:ruleRemoveById=949110,msg:'Rule excluded for GLPI-Agent queries'\"" >> /etc/modsecurity/modsecurity.conf
 
-    echo -e "# Exclure la règle 980130 pour les requêtes GLPI-Agent\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000003,phase:1,pass,nolog,ctl:ruleRemoveById=980130,msg:'Exclusion de la règle 980130 pour GLPI Agent'\"" >> /etc/modsecurity/modsecurity.conf
+    echo -e "\nSecRule REQUEST_HEADERS:User-Agent \"GLPI-Agent\" \"id:1000003,phase:1,pass,nolog,ctl:ruleRemoveById=980130,msg:'Rule excluded for GLPI-Agent queries'\"" >> /etc/modsecurity/modsecurity.conf
 
     sed -i "s/SecRuleEngine DetectionOnly/SecRuleEngine On/g" /etc/modsecurity/modsecurity.conf
 
 fi
 
-#echo -e "\n---------------------------------------------------------\nConfiguring AppArmor...\n"
+echo -e "\n---------------------------------------------------------\nConfiguring AppArmor...\n"
 
-#apt install apparmor-utils -y
+apt install apparmor-utils -y
 
-#apt install rsyslog -y
+apt install rsyslog -y
 
-#wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/config/usr.sbin.apache2 -P /etc/apparmor.d/
+if [ ! -f "/etc/apparmor.d/usr.sbin.apache2" ]; then
 
-#aa-enforce /etc/apparmor.d/usr.sbin.apache2
+    wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/config/usr.sbin.apache2 -P /etc/apparmor.d/
 
-#apparmor_parser -r /etc/apparmor.d/usr.sbin.apache2
+    aa-enforce /etc/apparmor.d/usr.sbin.apache2
+
+    apparmor_parser -r /etc/apparmor.d/usr.sbin.apache2
+
+else
+
+    echo -e "\n\nThe file \"/etc/apparmor.d/usr.sbin.apache2\" already exists.\nPlease consider configuring it for GLPI and enabling AppArmor.\n\n"
+
+fi
 
 echo -e "\n---------------------------------------------------------\nRestarting services...\n"
 
@@ -762,10 +772,3 @@ service fail2ban restart
 service apache2 restart
 
 echo -e "----------------------------------------------------------------\n\nYou can now access to : http://$WebSiteName/\n"
-
-if [ "$AddFirewall" = "True" ];
-then
-
-    echo -e "Don't forget to enable the firewall with the command : \"sudo ufw enable\"\n\n"
-
-fi
