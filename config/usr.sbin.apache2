@@ -1,4 +1,4 @@
-# Last Modified: Mon Sep  2 21:20:18 2024
+# Last Modified: Mon Sep  2 23:31:22 2024
 abi <abi/3.0>,
 
 include <tunables/global>
@@ -21,21 +21,40 @@ include <tunables/global>
 
   signal send set=winch peer=unconfined,
 
+  /etc/apache2/conf-enabled r,
+  /etc/apache2/conf-enabled/* r,
+  /etc/apache2/mods-enabled/* r,
+  /etc/apache2/mods-enabled/authz_host.load r,
+  /etc/apache2/ports.conf r,
   /etc/hosts r,
   /etc/ldap/ldap.conf r,
+  /etc/mime.types r,
+  /etc/modsecurity/crs/* r,
+  /etc/modsecurity/modsecurity.conf r,
   /etc/passwd r,
+  /run/apache2/apache2.pid.* rw,
   /usr/sbin/apache2 mr,
-  /var/log/apache2/access.log w,
-  /var/log/apache2/modsec_audit.log w,
-  /var/log/apache2/ssl_access.log w,
-  /var/log/apache2/ssl_error.log w,
+  /var/log/apache2/* w,
+  owner /etc/apache2/apache2.conf r,
+  owner /etc/apache2/conf-available/* r,
+  owner /etc/apache2/conf-enabled/ r,
+  owner /etc/apache2/mods-available/* r,
+  owner /etc/apache2/mods-enabled/ r,
+  owner /etc/apache2/sites-available/* r,
+  owner /etc/apache2/sites-enabled/ r,
+  owner /etc/modsecurity/ r,
+  owner /etc/modsecurity/unicode.mapping r,
   owner /run/apache2/apache2.pid rw,
-  owner /run/apache2/apache2.pid.* rw,
-  owner /var/www/glpi/files/_cache/core/** rw,
-  owner /var/www/glpi/files/_cache/templates/** rw,
-  owner /var/www/glpi/files/_inventories/* rw,
-  owner /var/www/glpi/files/_sessions/* rwk,
+  owner /usr/share/modsecurity-crs/ r,
+  owner /usr/share/modsecurity-crs/owasp-crs.load r,
+  owner /usr/share/modsecurity-crs/rules/ r,
+  owner /usr/share/modsecurity-crs/rules/* r,
   owner /var/www/glpi/** r,
+  owner /var/www/glpi/files/_cache/** rw,
+  owner /var/www/glpi/files/_inventories/* rw,
+  owner /var/www/glpi/files/_log/** w,
+  owner /var/www/glpi/files/_sessions/* rwk,
+
 
   ^DEFAULT_URI {
   }
