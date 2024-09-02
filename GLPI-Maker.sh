@@ -710,7 +710,7 @@ then
 
     ufw default deny incoming
 
-    ufw enable
+    yes | ufw enable
 
 fi
 
