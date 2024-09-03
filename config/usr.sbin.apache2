@@ -1,4 +1,4 @@
-# Last Modified: Mon Sep  2 23:31:22 2024
+# Last Modified: Tue Sep  3 21:09:50 2024
 abi <abi/3.0>,
 
 include <tunables/global>
@@ -50,10 +50,13 @@ include <tunables/global>
   owner /usr/share/modsecurity-crs/rules/ r,
   owner /usr/share/modsecurity-crs/rules/* r,
   owner /var/www/glpi/** r,
+  owner /var/www/glpi/files/** w,
   owner /var/www/glpi/files/_cache/** rw,
+  owner /var/www/glpi/files/_cron/** w,
   owner /var/www/glpi/files/_inventories/* rw,
   owner /var/www/glpi/files/_log/** w,
   owner /var/www/glpi/files/_sessions/* rwk,
+  owner /var/www/glpi/marketplace/** w,
 
 
   ^DEFAULT_URI {
