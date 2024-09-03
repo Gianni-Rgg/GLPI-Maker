@@ -551,13 +551,13 @@ sed -i -e "s/^session.cookie_httponly =*$/session.cookie_httponly = On/g" /etc/p
 
 sed -i -e "s/^session.cookie_samesite =*$/session.cookie_samesite = Lax/g" /etc/php/$phpv/apache2/php.ini
 
+echo "* * * * * php /var/www/glpi/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/www-data
+
 chown www-data:crontab /var/spool/cron/crontabs/www-data
 
 chmod 600 /var/spool/cron/crontabs/www-data
 
 chmod 744 /var/www/glpi/front/cron.php
-
-echo "* * * * * php /var/www/glpi/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/www-data
 
 if [ "$AddFusionInventory" = "True" ];
 then
