@@ -432,8 +432,6 @@ echo -e "\n---------------------------------------------------------\nConfigurin
 
 apt autoremove -y
 
-timedatectl set-timezone "$Tz1"/"$Tz2"
-
 if [ "$InstallMariaDB" == "True" ];
 then
 
