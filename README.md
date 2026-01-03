@@ -136,8 +136,12 @@ This script implements **enterprise-grade security** with multiple protection la
 - Protects against common web attacks (XSS, SQL injection, etc.)
 
 ### 🚫 Intrusion Prevention
-- **Fail2ban**: Automatic IP banning after failed login attempts
-- SSH and web service protection
+- **Fail2ban** (optional): Automatic IP banning after failed login attempts
+  - **SSH Protection**: Protects against brute-force SSH attacks
+  - **GLPI Login Protection**: Bans IPs after 5 failed login attempts
+  - **Ban Duration**: 1 hour (3600 seconds)
+  - **Detection Window**: 10 minutes
+  - **Monitored Logs**: Both HTTP and HTTPS access logs
 
 ### 🔐 Application Isolation
 - **AppArmor** (optional): Mandatory Access Control for Apache
@@ -184,6 +188,7 @@ The script will ask you to configure:
 | **SSH Port** | Custom SSH port | 22 |
 | **ModSecurity** | Web Application Firewall | - |
 | **AppArmor** | Mandatory Access Control | - |
+| **Fail2ban** | Intrusion Prevention System | - |
 
 ---
 
@@ -335,14 +340,52 @@ sudo cat /root/PASSWORDS.txt
 ```bash
 sudo service apache2 restart
 sudo service mariadb restart
-sudo service fail2ban restart
+sudo service fail2ban restart  # If Fail2ban was installed
 ```
 
 ### Check Service Status
 ```bash
 sudo systemctl status apache2
 sudo systemctl status mariadb
-sudo systemctl status fail2ban
+sudo systemctl status fail2ban  # If Fail2ban was installed
+```
+
+### Fail2ban Management (if installed)
+
+**Check jail status**:
+```bash
+# List all active jails
+sudo fail2ban-client status
+
+# Check GLPI authentication jail
+sudo fail2ban-client status glpi-auth
+
+# Check SSH jail
+sudo fail2ban-client status sshd
+```
+
+**View banned IPs**:
+```bash
+sudo fail2ban-client status glpi-auth
+```
+
+**Manually unban an IP**:
+```bash
+# Unban from GLPI login protection
+sudo fail2ban-client set glpi-auth unbanip 192.168.1.100
+
+# Unban from SSH protection
+sudo fail2ban-client set sshd unbanip 192.168.1.100
+```
+
+**View Fail2ban logs**:
+```bash
+sudo tail -f /var/log/fail2ban.log
+```
+
+**Test filter against logs**:
+```bash
+sudo fail2ban-regex /var/log/apache2/ssl_access.log /etc/fail2ban/filter.d/glpi-auth.conf
 ```
 
 ### View Apache Logs

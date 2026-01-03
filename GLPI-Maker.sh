@@ -354,6 +354,28 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
+    echo -e "\nDo you want to configure Fail2ban ? (y/n)"
+
+    read rep
+
+done
+
+if [ "$rep" = "y" ];
+then
+
+    AddFail2ban="True"
+
+else
+
+    AddFail2ban="False"
+
+fi
+
+rep=""
+
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
+
     clear
 
     echo -e "\nLink for GLPI : $glpi_link\n"
@@ -403,6 +425,8 @@ do
     echo -e "Add ModSecurity : $AddModSec\n"
 
     echo -e "Add AppArmor : $AddAppArmor\n"
+
+    echo -e "Add Fail2ban : $AddFail2ban\n"
 
     echo -e "\n\nDo you confirm ? (y/n)\n----------------------"
 
@@ -570,9 +594,9 @@ sed -i -e "s/memory_limit =.*/memory_limit = -1/g" /etc/php/$phpv/apache2/php.in
 
 sed -i -e "s/;session.cookie_secure =/session.cookie_secure = On/g" /etc/php/$phpv/apache2/php.ini
 
-sed -i -e "s/^session.cookie_httponly =*$/session.cookie_httponly = On/g" /etc/php/$phpv/apache2/php.ini
+sed -i -e "s/^session.cookie_httponly =$/session.cookie_httponly = On/g" /etc/php/$phpv/apache2/php.ini
 
-sed -i -e "s/^session.cookie_samesite =*$/session.cookie_samesite = Lax/g" /etc/php/$phpv/apache2/php.ini
+sed -i -e "s/^session.cookie_samesite =$/session.cookie_samesite = Lax/g" /etc/php/$phpv/apache2/php.ini
 
 echo "* * * * * php /var/www/glpi/front/cron.php &>/dev/null" >> /var/spool/cron/crontabs/www-data
 
@@ -743,13 +767,39 @@ then
 
 fi
 
-echo -e "\n---------------------------------------------------------\nConfiguring fail2ban...\n"
+if [ "$AddFail2ban" = "True" ];
+then
 
-apt install fail2ban -y
+    echo -e "\n---------------------------------------------------------\nConfiguring fail2ban...\n"
 
-cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+    apt install fail2ban -y
 
-sed -i "s/port    = ssh/port    = $SSHPort/g" /etc/fail2ban/jail.local
+    cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+
+    sed -i "s/port    = ssh/port    = $SSHPort/g" /etc/fail2ban/jail.local
+
+    cat << 'EOF' | tee /etc/fail2ban/filter.d/glpi-auth.conf > /dev/null
+[Definition]
+failregex = ^<HOST> .* "POST /.*login\.php.*" (200|302|400|401|403) .*$
+ignoreregex =
+EOF
+
+    cat << 'EOF' | tee -a /etc/fail2ban/jail.local > /dev/null
+
+[glpi-auth]
+enabled = true
+port = http,https
+filter = glpi-auth
+logpath = /var/log/apache2/access.log
+          /var/log/apache2/ssl_access.log
+maxretry = 5
+bantime = 3600
+findtime = 600
+EOF
+
+    service fail2ban restart
+
+fi
 
 if [ "$AddModSec" = "True" ];
 then
@@ -801,7 +851,12 @@ service ssh restart
 
 service cron restart
 
-service fail2ban restart
+if [ "$AddFail2ban" = "True" ];
+then
+
+    service fail2ban restart
+
+fi
 
 service apache2 restart
 
