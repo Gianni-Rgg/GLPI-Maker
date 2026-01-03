@@ -13,7 +13,7 @@ echo -e "\n\n\n-------------------------\n| Welcome to GLPI-Maker |\n-----------
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to download GLPI ? (y/n)"
+    echo -e "\nDo you want to download GLPI? (y/n)"
 
     read rep
 
@@ -25,7 +25,7 @@ then
     while [ -z $glpi_link ];
     do
 
-        echo -e "\nPlease, put the url for downloading GLPI :"
+        echo -e "\nPlease enter the URL for downloading GLPI:"
 
         read glpi_link
 
@@ -38,7 +38,7 @@ else
     while [ -z $glpi_link ];
     do
 
-        echo -e "\nPlease, put the location of the compressed file of GLPI (put the full link with \".tgz\" at the end) :"
+        echo -e "\nPlease enter the full path to the GLPI compressed file (ending with .tgz):"
 
         read glpi_link
 
@@ -53,7 +53,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to install MariaDB on this machine ? (y/n)"
+    echo -e "\nDo you want to install MariaDB on this machine? (y/n)"
 
     read rep
 
@@ -69,7 +69,7 @@ then
     until [ "$rep" = "y" ] || [ "$rep" = "n" ];
     do
 
-        echo -e "\nDo you want to generate secure passwords for the database ? (y/n)"
+        echo -e "\nDo you want to generate secure passwords for the database? (y/n)"
 
         read rep
 
@@ -90,13 +90,13 @@ then
         while [ -z $var1 ] || [ -z $var2 ] || [ $var1 != $var2 ];
         do
 
-            echo -e "\n\nPlease, enter the password for the user \"root\" for the database :"
+            echo -e "\n\nPlease enter the password for the database user \"root\":"
 
-            read -s -p "Password : " var1
+            read -s -p "Password: " var1
 
             echo
 
-            read -s -p "Repeat : " var2
+            read -s -p "Repeat: " var2
 
             echo
 
@@ -109,13 +109,13 @@ then
 
         while [ -z $var1 ] || [ -z $var2 ] || [ $var1 != $var2 ]; do
 
-            echo -e "\n\nPlease, enter the password for the user \"glpi\" for the database :"
+            echo -e "\n\nPlease enter the password for the database user \"glpi\":"
 
-            read -s -p "Password : " var1
+            read -s -p "Password: " var1
 
             echo
 
-            read -s -p "Repeat : " var2
+            read -s -p "Repeat: " var2
 
             echo
 
@@ -131,15 +131,15 @@ else
 
 fi
 
-echo -e "\nList of Supported Timezones : https://www.php.net/manual/en/timezones.php"
-echo -e "Please, specify the continent of the time zone where the server is (For example \"Europe\") :"
+echo -e "\nList of Supported Timezones: https://www.php.net/manual/en/timezones.php"
+echo -e "Please specify the continent for the server's timezone (e.g., \"Europe\"):"
 
 read Tz1
 
 if [ ! -z $Tz1 ];
 then
 
-        echo -e "\nPlease, specify the nearest city of the time zone where the server is (For example \"Paris\") :"
+        echo -e "\nPlease specify the nearest city for the server's timezone (e.g., \"Paris\"):"
 
         read Tz2
 
@@ -150,7 +150,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to install Fusion Inventory on GLPI ? (y/n)"
+    echo -e "\nDo you want to install Fusion Inventory on GLPI? (y/n)"
 
     read rep
 
@@ -166,7 +166,7 @@ then
     until [ "$rep" = "y" ] || [ "$rep" = "n" ];
     do
 
-        echo -e "\nDo you want to download Fusion Inventory ? (y/n)"
+        echo -e "\nDo you want to download Fusion Inventory? (y/n)"
 
         read rep
 
@@ -178,7 +178,7 @@ then
         while [ -z $fi_link ];
         do
 
-            echo -e "\nPlease, put the url for downloading Fusion Inventory :"
+            echo -e "\nPlease enter the URL for downloading Fusion Inventory:"
 
             read fi_link
 
@@ -191,7 +191,7 @@ then
         while [ -z $fi_link ];
         do
 
-            echo -e "\nPlease, put the location of the compressed file of Fusion Inventory (put the full link with \".tar.bz2\" at the end) :"
+            echo -e "\nPlease enter the full path to the Fusion Inventory compressed file (ending with .tar.bz2):"
 
             read fi_link
 
@@ -212,7 +212,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to configure SSL/TLS with a new Certification Authority (for HTTPS access) ? (y/n)\nThe script will automatically create a CA with signed certificate and configure apache for this.\nIn the case where you would already have a CA, you will be able to replace the certificates in the apache ssl configuration file."
+    echo -e "\nDo you want to configure SSL/TLS with a new Certification Authority (for HTTPS access)? (y/n)\nThe script will automatically create a CA with signed certificate and configure Apache.\nIf you already have a CA, you can replace the certificates in the Apache SSL configuration file later."
 
     read rep
 
@@ -226,7 +226,7 @@ then
         while [ -z $WebSiteName ];
         do
 
-        echo -e "\nWhat will be the domain name of the website ? For example \"glpi.mydom.local\""
+        echo -e "\nWhat will be the domain name of the website? (e.g., \"glpi.mydom.local\")"
         read WebSiteName
 
         done
@@ -237,7 +237,7 @@ then
         while [ -z $Country ];
         do
 
-        echo -e "\nWhat country code will be displayed on the certificate ? For example FR (for France)"
+        echo -e "\nWhat country code will be displayed on the certificate? (e.g., FR for France)"
         read Country
 
         done
@@ -245,7 +245,7 @@ then
         while [ -z $State ];
         do
 
-        echo -e "\nWhich state will be displayed on the certificate ? For example \"Ile-De-France\""
+        echo -e "\nWhich state/region will be displayed on the certificate? (e.g., \"Ile-De-France\")"
         read State
 
         done
@@ -253,7 +253,7 @@ then
         while [ -z $City ];
         do
 
-        echo -e "\nWhich city will be displayed on the certificate ? For example \"Paris\""
+        echo -e "\nWhich city will be displayed on the certificate? (e.g., \"Paris\")"
         read City
 
         done
@@ -261,7 +261,7 @@ then
         while [ -z $Company ];
         do
 
-        echo -e "\nWhich company will be displayed on the certificate ?"
+        echo -e "\nWhich company name will be displayed on the certificate?"
         read Company
 
         done
@@ -277,7 +277,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to configure the firewall (ufw) ? (y/n)"
+    echo -e "\nDo you want to configure the firewall (ufw)? (y/n)"
 
     read rep
 
@@ -294,7 +294,7 @@ else
 
 fi
 
-echo -e "\nWhat port do you want to use for SSH ? (Port 22 by default)"
+echo -e "\nWhat port do you want to use for SSH? (default: 22)"
 
 read SSHPort
 
@@ -310,7 +310,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to configure ModSecurity ? (y/n)"
+    echo -e "\nDo you want to configure ModSecurity? (y/n)"
 
     read rep
 
@@ -332,7 +332,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to configure AppArmor ? (y/n)"
+    echo -e "\nDo you want to configure AppArmor? (y/n)"
 
     read rep
 
@@ -354,7 +354,7 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
-    echo -e "\nDo you want to configure Fail2ban ? (y/n)"
+    echo -e "\nDo you want to configure Fail2ban? (y/n)"
 
     read rep
 
@@ -378,57 +378,57 @@ do
 
     clear
 
-    echo -e "\nLink for GLPI : $glpi_link\n"
+    echo -e "\nGLPI Link: $glpi_link\n"
 
-    echo -e "Add MariaDB : $InstallMariaDB\n"
+    echo -e "Install MariaDB: $InstallMariaDB\n"
 
     if [ "$InstallMariaDB" = "True" ];
     then
 
-        echo -e "Generate passwords for db : $GenDBPass\n"
+        echo -e "Generate database passwords: $GenDBPass\n"
 
     fi
 
     if [ -z $Tz1 ];
     then
 
-        echo -e "Timezone : No timezone\n"
+        echo -e "Timezone: Not configured\n"
 
     else
 
-        echo -e "Timezone : $Tz1/$Tz2\n"
+        echo -e "Timezone: $Tz1/$Tz2\n"
 
     fi
 
-    echo -e "Add Fusion Inventory : $AddFusionInventory\n"
+    echo -e "Install Fusion Inventory: $AddFusionInventory\n"
 
     if [[ "$AddFusionInventory" == "True" ]];
     then
 
-        echo -e "Link for FI : $fi_link\n"
+        echo -e "Fusion Inventory Link: $fi_link\n"
 
     fi
 
-    echo -e "Add HTTPS : $AddHTTPS\n"
+    echo -e "Configure HTTPS: $AddHTTPS\n"
 
     if [[ "$AddHTTPS" == "True" ]];
     then
 
-        echo -e "Web site name : $WebSiteName\nCountry : $Country\nState : $State\nCity : $City\nCompany : $Company\n"
+        echo -e "Website name: $WebSiteName\nCountry: $Country\nState: $State\nCity: $City\nCompany: $Company\n"
 
     fi
 
-    echo -e "Add firewall : $AddFirewall\n"
+    echo -e "Configure firewall: $AddFirewall\n"
 
-    echo -e "SSH port : $SSHPort\n"
+    echo -e "SSH port: $SSHPort\n"
 
-    echo -e "Add ModSecurity : $AddModSec\n"
+    echo -e "Configure ModSecurity: $AddModSec\n"
 
-    echo -e "Add AppArmor : $AddAppArmor\n"
+    echo -e "Configure AppArmor: $AddAppArmor\n"
 
-    echo -e "Add Fail2ban : $AddFail2ban\n"
+    echo -e "Configure Fail2ban: $AddFail2ban\n"
 
-    echo -e "\n\nDo you confirm ? (y/n)\n----------------------"
+    echo -e "\n\nDo you confirm these settings? (y/n)\n----------------------"
 
     read rep
 
@@ -491,11 +491,11 @@ then
 
         DbRootPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-        echo -e "\n\nThe password for the user \"root\" from the database is : $DbRootPassword" > $HOMEpath/PASSWORDS.txt
+        echo -e "\n\nDatabase password for user \"root\": $DbRootPassword" > $HOMEpath/PASSWORDS.txt
 
         DbUserPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-        echo -e "\nThe password for the user \"glpi\" from the database is : $DbUserPassword\n" >> $HOMEpath/PASSWORDS.txt
+        echo -e "\nDatabase password for user \"glpi\": $DbUserPassword\n" >> $HOMEpath/PASSWORDS.txt
 
     fi
 
@@ -714,19 +714,19 @@ then
 
     WebGLPIpassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-    echo -e "\nThe password for the user \"glpi\" from the website is : $WebGLPIpassword" >> $HOMEpath/PASSWORDS.txt
+    echo -e "\nWebsite password for user \"glpi\": $WebGLPIpassword" >> $HOMEpath/PASSWORDS.txt
 
     WebPostOnlyPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-    echo -e "\nThe password for the user \"post-only\" from the website is : $WebPostOnlyPassword" >> $HOMEpath/PASSWORDS.txt
+    echo -e "\nWebsite password for user \"post-only\": $WebPostOnlyPassword" >> $HOMEpath/PASSWORDS.txt
 
     WebTechPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-    echo -e "\nThe password for the user \"tech\" from the website is : $WebTechPassword" >> $HOMEpath/PASSWORDS.txt
+    echo -e "\nWebsite password for user \"tech\": $WebTechPassword" >> $HOMEpath/PASSWORDS.txt
 
     WebNormalPassword=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 20; echo)
 
-    echo -e "\nThe password for the user \"normal\" from the website is : $WebNormalPassword\n\n" >> $HOMEpath/PASSWORDS.txt
+    echo -e "\nWebsite password for user \"normal\": $WebNormalPassword\n\n" >> $HOMEpath/PASSWORDS.txt
 
     mysql -u glpi -p"$DbUserPassword" -e "USE glpi; UPDATE glpi_users SET password=MD5('$WebGLPIpassword') WHERE name='glpi';"
 
@@ -736,7 +736,7 @@ then
 
     mysql -u glpi -p"$DbUserPassword" -e "USE glpi; UPDATE glpi_users SET password=MD5('$WebNormalPassword') WHERE name='normal';"
 
-    echo -e "\nPlease, delete this file after recovering the passwords.\n\n" >> $HOMEpath/PASSWORDS.txt
+    echo -e "\nPlease delete this file after saving the passwords in a secure location.\n\n" >> $HOMEpath/PASSWORDS.txt
 
     chmod 700 $HOMEpath/PASSWORDS.txt
 
@@ -780,7 +780,7 @@ then
 
     cat << 'EOF' | tee /etc/fail2ban/filter.d/glpi-auth.conf > /dev/null
 [Definition]
-failregex = ^<HOST> .* "POST /.*login\.php.*" (200|302|400|401|403) .*$
+failregex = ^<HOST> .* "POST /.*login\.php.*" (400|401|403) .*$
 ignoreregex =
 EOF
 
@@ -839,7 +839,7 @@ then
 
     else
 
-        echo -e "\n\nThe file \"/etc/apparmor.d/usr.sbin.apache2\" already exists.\nPlease consider configuring it for GLPI and enabling AppArmor.\n\n"
+        echo -e "\n\nThe file \"/etc/apparmor.d/usr.sbin.apache2\" already exists.\nPlease configure it manually for GLPI and enable AppArmor.\n\n"
 
     fi
 
@@ -860,4 +860,4 @@ fi
 
 service apache2 restart
 
-echo -e "----------------------------------------------------------------\n\nYou can now access to : http://$WebSiteName/\n"
+echo -e "----------------------------------------------------------------\n\nYou can now access GLPI at: http://$WebSiteName/\n"
