@@ -31,7 +31,6 @@ include <tunables/global>
   /etc/mime.types r,
   /etc/modsecurity/crs/* r,
   /etc/modsecurity/modsecurity.conf r,
-  /etc/passwd r,
   /run/apache2/apache2.pid.* rw,
   /usr/sbin/apache2 mr,
   /var/log/apache2/* w,

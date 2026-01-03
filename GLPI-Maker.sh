@@ -132,14 +132,14 @@ else
 fi
 
 echo -e "\nList of Supported Timezones : https://www.php.net/manual/en/timezones.php"
-echo -e "Please, specify the continent of the time zone where the server is (For exemple \"Europe\") :"
+echo -e "Please, specify the continent of the time zone where the server is (For example \"Europe\") :"
 
 read Tz1
 
 if [ ! -z $Tz1 ];
 then
 
-        echo -e "\nPlease, specify the nearest city of the time zone where the server is (For exemple \"Paris\") :"
+        echo -e "\nPlease, specify the nearest city of the time zone where the server is (For example \"Paris\") :"
 
         read Tz2
 
@@ -226,7 +226,7 @@ then
         while [ -z $WebSiteName ];
         do
 
-        echo -e "\nWhat will be the domain name of the website ? For exemple \"glpi.mydom.local\""
+        echo -e "\nWhat will be the domain name of the website ? For example \"glpi.mydom.local\""
         read WebSiteName
 
         done
@@ -245,7 +245,7 @@ then
         while [ -z $State ];
         do
 
-        echo -e "\nWhich state will be displayed on the certificate ? For exemple \"Ile-De-France\""
+        echo -e "\nWhich state will be displayed on the certificate ? For example \"Ile-De-France\""
         read State
 
         done
@@ -253,7 +253,7 @@ then
         while [ -z $City ];
         do
 
-        echo -e "\nWhich city will be displayed on the certificate ? For exemple \"Paris\""
+        echo -e "\nWhich city will be displayed on the certificate ? For example \"Paris\""
         read City
 
         done
@@ -332,9 +332,31 @@ rep=""
 until [ "$rep" = "y" ] || [ "$rep" = "n" ];
 do
 
+    echo -e "\nDo you want to configure AppArmor ? (y/n)"
+
+    read rep
+
+done
+
+if [ "$rep" = "y" ];
+then
+
+    AddAppArmor="True"
+
+else
+
+    AddAppArmor="False"
+
+fi
+
+rep=""
+
+until [ "$rep" = "y" ] || [ "$rep" = "n" ];
+do
+
     clear
 
-    echo -e "\nLink for GLPI : $glpi_link\n"
+    echo -e "\nLink for GLPI : $glpi_link\n"
 
     echo -e "Add MariaDB : $InstallMariaDB\n"
 
@@ -380,6 +402,8 @@ do
 
     echo -e "Add ModSecurity : $AddModSec\n"
 
+    echo -e "Add AppArmor : $AddAppArmor\n"
+
     echo -e "\n\nDo you confirm ? (y/n)\n----------------------"
 
     read rep
@@ -401,8 +425,6 @@ apt upgrade -y
 echo -e "\n---------------------------------------------------------\nInstalling web services...\n"
 
 apt install apache2 -y
-apt install php -y
-apt install libapache2-mod-php -y
 
 if [ "$InstallMariaDB" = "True" ];
 then
@@ -413,6 +435,8 @@ fi
 
 echo -e "\n---------------------------------------------------------\nInstalling php...\n"
 
+apt install php -y
+apt install libapache2-mod-php -y
 apt install php-mysqli -y
 apt install php-mbstring -y
 apt install php-curl -y
@@ -427,6 +451,7 @@ apt install php-zip -y
 apt install php-bz2 -y
 apt install php-ldap -y
 apt install php-imap -y
+apt install php-bcmath -y
 
 echo -e "\n---------------------------------------------------------\nConfiguring OS...\n"
 
@@ -496,7 +521,7 @@ a2enmod php*
 
 a2enmod rewrite
 
-echo -e "\n---------------------------------------------------------\nInstallating GLPI...\n"
+echo -e "\n---------------------------------------------------------\nInstalling GLPI...\n"
 
 tmp_install_path="/tmp/glpi_install"
 
@@ -657,7 +682,7 @@ then
 
     echo -e "\n---------------------------------------------------------\nConfiguring GLPI...\n"
 
-    php /var/www/glpi/bin/console db:install --db-name=glpi --db-user=glpi --db-password=$DbUserPassword -n
+    php /var/www/glpi/bin/console db:install --db-name=glpi --db-user=glpi --db-password=$DbUserPassword --allow-superuser -n
 
     chown -R www-data:www-data /var/www/glpi
 
@@ -745,23 +770,28 @@ then
 
 fi
 
-echo -e "\n---------------------------------------------------------\nConfiguring AppArmor...\n"
+if [ "$AddAppArmor" = "True" ];
+then
 
-apt install apparmor-utils -y
+    echo -e "\n---------------------------------------------------------\nConfiguring AppArmor...\n"
 
-apt install rsyslog -y
+    apt install apparmor-utils -y
 
-if [ ! -f "/etc/apparmor.d/usr.sbin.apache2" ]; then
+    apt install rsyslog -y
 
-    wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/config/usr.sbin.apache2 -P /etc/apparmor.d/
+    if [ ! -f "/etc/apparmor.d/usr.sbin.apache2" ]; then
 
-    aa-enforce /etc/apparmor.d/usr.sbin.apache2
+        wget https://raw.githubusercontent.com/Gianni-Rgg/GLPI-Maker/main/config/usr.sbin.apache2 -P /etc/apparmor.d/
 
-    apparmor_parser -r /etc/apparmor.d/usr.sbin.apache2
+        aa-enforce /etc/apparmor.d/usr.sbin.apache2
 
-else
+        apparmor_parser -r /etc/apparmor.d/usr.sbin.apache2
 
-    echo -e "\n\nThe file \"/etc/apparmor.d/usr.sbin.apache2\" already exists.\nPlease consider configuring it for GLPI and enabling AppArmor.\n\n"
+    else
+
+        echo -e "\n\nThe file \"/etc/apparmor.d/usr.sbin.apache2\" already exists.\nPlease consider configuring it for GLPI and enabling AppArmor.\n\n"
+
+    fi
 
 fi
 
