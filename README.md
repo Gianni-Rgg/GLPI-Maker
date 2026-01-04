@@ -48,14 +48,14 @@
 
 - ❌ **DO NOT run this script on a server hosting other services or websites**
 - ❌ **DO NOT run on a production server with existing applications**
-- ✅ **Use a fresh, dedicated Debian/Ubuntu installation**
-- ✅ **Ideal for VMs, containers, or dedicated servers**
+- ✅ **Use a fresh, dedicated Debian installation**
+- ✅ **Ideal for VMs or dedicated servers**
 
 The script will modify system configurations (Apache, firewall, security modules) that may conflict with existing services.
 
 ### System Requirements
 
-- **Operating System**: Debian-based Linux (Debian 10+, Ubuntu 20.04+)
+- **Operating System**: Linux Debian
 - **Architecture**: x86_64
 - **RAM**: Minimum 2GB (4GB recommended)
 - **Disk Space**: Minimum 10GB free
@@ -432,7 +432,7 @@ Contributions are welcome! Feel free to:
 ### Reporting Issues
 
 When reporting issues, please include:
-- Your Debian/Ubuntu version
+- Your Debian version
 - GLPI version attempted
 - Error messages or logs
 - Steps to reproduce
